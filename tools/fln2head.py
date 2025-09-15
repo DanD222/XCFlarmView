@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 import sys
 import requests
 
-URL = "https://www.flarmnet.org/static/files/fln/iglide_dec.fln"
+URL = "https://www.flarmnet.org/files/data.fln"
 URLGN = "http://ddb.glidernet.org/download"
 # 2. download the data behind the URL
 response = requests.get(URL)
