@@ -64,10 +64,10 @@ Target::Target( nmea_pflaa_s a_pflaa ) {
 	is_nearest=false;
 	alarm=false;
 	alarm_timer = 0;
-	for( int i=0; i<(sizeof(flarmnet)/sizeof(flarmnet[0])); i++){
-		if( pflaa.ID == flarmnet[i].flarmID ){
-			reg=(char*)flarmnet[i].reg;
-			comp=(char*)flarmnet[i].comp;
+	for( int i=0; i<(sizeof(flarmnet_db)/sizeof(flarmnet_db[0])); i++){
+		if( pflaa.ID == flarmnet_db[i].id ){
+			reg=(char*)flarmnet_db[i].reg;
+			comp=(char*)flarmnet_db[i].cn;
 		}
 	}
 	if( notify_near.get() == BUZZ_OFF )
