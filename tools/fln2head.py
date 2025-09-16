@@ -5,6 +5,8 @@ import csv
 import requests
 import re
 
+import datetime
+
 HEADER = """\
 /*
  * flarmnet_simple.h - automatisch generiert aus OGN + Flarmnet
@@ -30,6 +32,13 @@ FOOTER = """\
 
 URL_OGN = "http://ddb.glidernet.org/download"
 URL_FLARMNET = "https://www.flarmnet.org/files/ddb.csv"
+
+
+# Get current date
+today = datetime.date.today()
+
+# Format as DDMMYY
+version_str = today.strftime("%d%m%y")
 
 def download_file(url, local_file):
     r = requests.get(url)
@@ -81,6 +90,7 @@ def main():
         if fid not in ogn_data:
             ogn_data[fid] = entry
 
+    print(f'#define FLARMNET_VERSION "{version_str}"\n')
     print(HEADER)
     sorted_keys = sorted(ogn_data.keys(), key=lambda x: int(x,16))
     for fid in sorted_keys:
