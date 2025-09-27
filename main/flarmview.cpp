@@ -156,13 +156,13 @@ extern "C" void app_main(void)
     TM.begin();
     Buzzer::play( BUZZ_DH, 150,audio_volume.get());
 
-    // if( traffic_demo.get() ){
+    if( traffic_demo.get() ){
     	ESP_LOGI(FNAME,"Traffic Demo");
     	traffic_demo.set(0);
     	traffic_demo.commit();
     	delay( 100 );
     	Flarm::startSim();
-    // }
+    }
 
     if( Serial::selfTest() )
     	printf("Serial Loop Test OK");
