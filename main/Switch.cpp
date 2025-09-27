@@ -31,7 +31,7 @@ TaskHandle_t Switch::pid;
 
 #define TASK_PERIOD 10
 
-Switch::Switch() {
+Switch::Switch( ) {
 	_sw = GPIO_NUM_0;
 	_mode = B_MODE;
 	_closed = false;
@@ -114,34 +114,26 @@ void Switch::tick() {
 		break;
 
 	case B_PRESSED:
-		if (isClosed()) {
+		if (isOpen()) {
+			int dur = currentMillis - p_time;
 			// Wenn der Button länger als 750 ms gedrückt wird, ist es ein Langdruck
-			if (currentMillis - p_time > 750) {
-				_state = B_LONG_PRESSED;
-
-			}
-		} else {
-			// Button wurde losgelassen
-			if (currentMillis - p_time >= 50) {  // Entprellen (50 ms)
-				// Wenn der Druck kürzer als 750 ms war, ist es ein kurzer Druck
+			if (dur < 200) {
 				sendPress();
-				_state = B_IDLE;
 			}
-		}
-		break;
-
-	case B_LONG_PRESSED:
-		if (isOpen()) {  // Button wurde losgelassen
+			else if (dur > 500 && dur < 1500 ) {
+				sendLongPress();
+			}
+			else if (dur > 1500 && dur < 3000) {   // we implement this as a long long click
+				sendDoubleClick();
+			}
 			_state = B_IDLE;
-			sendLongPress();
-			// sendPress();
 		}
 		break;
 	}
 }
 
 void Switch::sendPress(){
-	ESP_LOGI(FNAME,"send press p: %ld  r: %ld", millis()-p_time, millis()-r_time );
+	ESP_LOGI(FNAME,"send press p: %ld", millis()-p_time );
 	for (auto &observer : observers){
 		if( _mode == B_MODE ){
 			observer->press();
@@ -154,20 +146,23 @@ void Switch::sendPress(){
 		}
 	}
 	// ESP_LOGI(FNAME,"End pressed action");
-
 }
 
 void Switch::sendLongPress(){
 	ESP_LOGI(FNAME,"send longPress %ld", millis()-p_time );
 	for (auto &observer : observers)
-		observer->longPress();
+		if( _mode == B_MODE ){
+			observer->longPress();
+		}
 	// ESP_LOGI(FNAME,"End long pressed action");
 }
 
 void Switch::sendDoubleClick(){
-	ESP_LOGI(FNAME,"send doubleClick p:%ld r:%ld", millis()-p_time, millis()-r_time );
+	ESP_LOGI(FNAME,"send long long press p:%ld", millis()-p_time );
 	for (auto &observer : observers)
-		observer->doubleClick();
+		if( _mode == B_MODE ){
+			observer->doubleClick();
+		}
 	// ESP_LOGI(FNAME,"End long pressed action");
 }
 

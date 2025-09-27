@@ -32,6 +32,7 @@
 AdaptUGC *egl = 0;
 OTA *ota = 0;
 DataMonitor DM;
+TargetManager TM;
 
 SetupMenu *menu=0;
 bool inch2dot4=false;
@@ -152,16 +153,16 @@ extern "C" void app_main(void)
     egl->clearScreen();
     Flarm::begin();
     Serial::begin();
-    TargetManager::begin();
+    TM.begin();
     Buzzer::play( BUZZ_DH, 150,audio_volume.get());
 
-    if( traffic_demo.get() ){
+    // if( traffic_demo.get() ){
     	ESP_LOGI(FNAME,"Traffic Demo");
     	traffic_demo.set(0);
     	traffic_demo.commit();
     	delay( 100 );
     	Flarm::startSim();
-    }
+    // }
 
     if( Serial::selfTest() )
     	printf("Serial Loop Test OK");

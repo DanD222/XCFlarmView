@@ -34,7 +34,7 @@ public:
 	void dumpInfo();
 	void drawInfo(bool erase=false);
 	void redrawInfo();
-	void draw(bool erase);
+	void draw(bool erase, bool follow);
 	void checkClose();
 	inline bool haveAlarm(){ return alarm; };
 	inline bool sameAlt( uint tolerance=150 ) { return( abs( pflaa.relVertical )< tolerance ); };
@@ -43,10 +43,11 @@ public:
 	inline bool isNearest() { return is_nearest; };
 	inline bool isBestClimber() { return is_best; };
 
+
 private:
 	void drawClimb( int x, int y, int size, int climb );
 	void checkAlarm();
-	void drawFlarmTarget( int x, int y, int bearing, int sideLength, bool erase=false, bool closest=false, ucg_color_t color={ COLOR_GREEN } );
+	void drawFlarmTarget( int x, int y, int bearing, int sideLength, bool erase=false, bool closest=false, ucg_color_t color={ COLOR_GREEN }, bool follow=false );
 	void drawDist( uint8_t r, uint8_t g, uint8_t b );
 	void drawVar( uint8_t r, uint8_t g, uint8_t b );
 	void drawAlt( uint8_t r, uint8_t g, uint8_t b );
@@ -68,11 +69,12 @@ private:
 	float rel_target_dir;
 	int old_track;
 	float dist, prox;
-	int x,y,old_ax, old_ay, old_x0, old_y0, old_x1, old_y1, old_x2, old_y2, old_closest, old_sidelen;
+	int x,y,old_ax, old_ay, old_x0, old_y0, old_x1, old_y1, old_x2, old_y2, old_closest, old_sidelen, old_cirsize, old_cirsizeteam;
 	char * reg;  // registration from flarmnet DB
 	char * comp; // competition ID
 
 	bool is_nearest;
+	bool do_follow;
 	bool is_best;
 	bool alarm;
 	int alarm_timer;
