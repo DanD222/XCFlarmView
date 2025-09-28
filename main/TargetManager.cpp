@@ -334,8 +334,11 @@ void TargetManager::tick() {
     if (id_timer) id_timer--;
 
     // --- Periodic logging ---
-    if (!(_tick % 20)) { // every 50 ms
+    if (!(_tick % 20)) { // every 50 ms * 20 = 1 s
         ESP_LOGI(FNAME, "Num targets: %d", targets.size());
+    }
+    if (!(_tick % 60)) { // every 50 ms * 60 = 3 s
+        redrawNeeded = true;
     }
 
     // --- Main tick block (every 5 ticks) ---

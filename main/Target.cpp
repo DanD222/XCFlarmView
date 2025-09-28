@@ -15,7 +15,7 @@
 
 extern AdaptUGC *egl;
 #define TARGET_SIZE_MIN 10
-#define TARGET_SIZE_MAX 60
+#define TARGET_SIZE_MAX 25
 
 // Static members initialization
 char Target::cur_dist[32] = {0};
@@ -100,53 +100,89 @@ void Target::redrawInfo(){
     old_dist=-10000; old_alt=100000; old_id=0; old_var=-10000;
 }
 
-void Target::drawInfo(bool erase){
-    char s[32]={0};
-    if(pflaa.ID==0) return;
 
-    if((old_dist!=(int)(dist*100)) || erase){
-        if(strlen(cur_dist)) drawDist(COLOR_BLACK);
-        if(!erase){ sprintf(cur_dist,"%.2f",Units::Distance(dist)); drawDist(COLOR_WHITE); old_dist=(int)(dist*100); }
-    }
+void Target::drawInfo(bool erase) {
+	char buf[32] = {0};
+	if (pflaa.ID == 0) return;
 
-    if((old_id!=pflaa.ID) || erase){
-        if(strlen(cur_id)) drawID(COLOR_BLACK);
-        if(!erase){
-            if(reg){ if(comp) sprintf(cur_id,"%s %s",reg,comp); else sprintf(cur_id,"%s",reg); }
-            else sprintf(cur_id,"%06X",pflaa.ID);
-            drawID(COLOR_WHITE);
-            old_id = pflaa.ID;
-        }
-    }
+	// --- Distance ---
+	if ((old_dist != (int)(dist * 100)) || erase) {
+		if (strlen(cur_dist)) drawDist(COLOR_BLACK);
+		if (!erase) {
+			sprintf(cur_dist, "%.2f", Units::Distance(dist));
+			drawDist(COLOR_WHITE);
+			old_dist = (int)(dist * 100);
+		} else {
+			cur_dist[0] = '\0';
+		}
+	}
 
-    if((old_alt!=pflaa.relVertical) || erase){
-        if(strlen(cur_alt)) drawAlt(COLOR_BLACK);
-        if(!erase){
-            int alt=(int)(Units::Altitude(pflaa.relVertical+0.5));
-            sprintf(cur_alt,"%s%d",(pflaa.relVertical>0)?"+":"",alt);
-            drawAlt(COLOR_WHITE);
-            old_alt=pflaa.relVertical;
-        }
-    }
+	// --- ID ---
+	if ((old_id != pflaa.ID) || erase) {
+		if (strlen(cur_id)) drawID(COLOR_BLACK);
+		if (!erase) {
+			if (reg) {
+				if (comp) sprintf(cur_id, "%s %s", reg, comp);
+				else      sprintf(cur_id, "%s", reg);
+			} else {
+				sprintf(cur_id, "%06X", pflaa.ID);
+			}
+			drawID(COLOR_WHITE);
+			old_id = pflaa.ID;
+		} else {
+			cur_id[0] = '\0';
+		}
+	}
 
-    if((old_var!=(int)(pflaa.climbRate*10)) || erase){
-        if(strlen(cur_var)) drawVar(COLOR_BLACK);
-        if(!erase){
-            float climb = Units::Vario((float)pflaa.climbRate);
-            sprintf(cur_var,"%+.1f",climb);
-            drawVar(COLOR_WHITE);
-            old_var=(int)(pflaa.climbRate*10);
-        }
-    }
+	// --- Altitude ---
+	if ((old_alt != pflaa.relVertical) || erase) {
+		if (strlen(cur_alt)) drawAlt(COLOR_BLACK);
+		if (!erase) {
+			int alt = (int)(Units::Altitude(pflaa.relVertical + 0.5));
+			sprintf(cur_alt, "%s%d", (pflaa.relVertical > 0) ? "+" : "", alt);
+			drawAlt(COLOR_WHITE);
+			old_alt = pflaa.relVertical;
+		} else {
+			cur_alt[0] = '\0';
+		}
+	}
 
-    // Units display
-    if(erase) egl->setColor(COLOR_BLACK); else egl->setColor(COLOR_BLUE);
-    egl->setFont(ucg_font_fub14_hf);
-    int w = egl->getStrWidth("ID"); egl->setPrintPos(DISPLAY_W-5-w, DISPLAY_H-37); egl->printf("ID");
-    sprintf(s,"Dis %s", Units::DistanceUnit()); w=egl->getStrWidth(s); egl->setPrintPos(DISPLAY_W-5-w,50); egl->printf("%s",s);
-    egl->setPrintPos(5,50); egl->printf("Var %s",Units::VarioUnit());
-    egl->setPrintPos(5,DISPLAY_H-37); egl->printf("Alt %s",Units::AltitudeUnit());
+	// --- Vario ---
+	if ((old_var != (int)(pflaa.climbRate * 10)) || erase) {
+		if (strlen(cur_var)) drawVar(COLOR_BLACK);
+		if (!erase) {
+			float climb = Units::Vario((float)pflaa.climbRate);
+			sprintf(cur_var, "%+.1f", climb);
+			drawVar(COLOR_WHITE);
+			old_var = (int)(pflaa.climbRate * 10);
+		} else {
+			cur_var[0] = '\0';
+		}
+	}
+
+	// --- Units display ---
+	if (erase) egl->setColor(COLOR_BLACK);
+	else       egl->setColor(COLOR_BLUE);
+
+	egl->setFont(ucg_font_fub14_hf);
+
+	int w = egl->getStrWidth("ID");
+	egl->setPrintPos(DISPLAY_W - 5 - w, DISPLAY_H - 37);
+	egl->printf("ID");
+
+	sprintf(buf, "Dis %s", Units::DistanceUnit());
+	w = egl->getStrWidth(buf);
+	egl->setPrintPos(DISPLAY_W - 5 - w, 50);
+	egl->printf("%s", buf);
+
+	egl->setPrintPos(5, 50);
+	egl->printf("Var %s", Units::VarioUnit());
+
+	egl->setPrintPos(5, DISPLAY_H - 37);
+	egl->printf("Alt %s", Units::AltitudeUnit());
 }
+
+
 
 // --- drawClimb ---
 void Target::drawClimb(int x,int y,int size,int climb){
