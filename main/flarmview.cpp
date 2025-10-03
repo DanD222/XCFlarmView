@@ -156,6 +156,8 @@ extern "C" void app_main(void)
     TM.begin();
     Buzzer::play( BUZZ_DH, 150,audio_volume.get());
 
+    ESP_LOGI(FNAME,"Team ID: %X", team_id.get() );
+
     if( traffic_demo.get() ){
     	ESP_LOGI(FNAME,"Traffic Demo");
     	traffic_demo.set(0);
@@ -168,6 +170,8 @@ extern "C" void app_main(void)
     	printf("Serial Loop Test OK");
     else
     	printf("Self Loop Test Failed");
+
+    ESP_LOGI(FNAME,"Team ID: %X", team_id.get() );
 
     while(1){
     	delay(1000);

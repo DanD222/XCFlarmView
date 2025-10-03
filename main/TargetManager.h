@@ -58,7 +58,7 @@ private:
 	static bool erase_info;
 	static int info_timer;
 	static float old_radius;
-	static unsigned int follow_target;
+	static unsigned int team_id;
 };
 
 #endif /* MAIN_TARGETMANAGER_H_ */

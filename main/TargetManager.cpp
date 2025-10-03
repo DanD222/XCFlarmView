@@ -27,7 +27,7 @@ unsigned int TargetManager::min_id = 0;
 unsigned int TargetManager::maxcl_id = 0;
 bool TargetManager::redrawNeeded = true;
 bool TargetManager::erase_info = false;
-unsigned int TargetManager::follow_target = 0;
+unsigned int TargetManager::team_id = 0;
 int TargetManager::info_timer = 0;
 float TargetManager::old_radius=0.0;
 xSemaphoreHandle display=NULL;
@@ -224,8 +224,8 @@ void TargetManager::press() {
 
 void TargetManager::doubleClick() {
 	if( id_iter != targets.end() ){
-		follow_target = id_iter->first;
-		ESP_LOGI(FNAME,"doubleClick(), target ID locked: %X", follow_target );
+		team_id = id_iter->first;
+		ESP_LOGI(FNAME,"doubleClick(), target ID locked: %X", team_id );
 	}
 };
 
@@ -413,7 +413,7 @@ void TargetManager::tick() {
                         tgt.drawInfo();
                     }
 
-                    tgt.draw(false, it->first == follow_target);
+                    tgt.draw(false, it->first == team_id);
 
                     if (!(_tick % 2)) tgt.checkClose();
 
@@ -422,7 +422,7 @@ void TargetManager::tick() {
                     // Erase / remove target
                     if (id_iter != targets.end() && it->first == id_iter->first) id_iter++;
                     if (tgt.isNearest()) tgt.drawInfo(true);
-                    tgt.draw(true, it->first == follow_target);
+                    tgt.draw(true, it->first == team_id);
 
                     it = targets.erase(it);
                 }
