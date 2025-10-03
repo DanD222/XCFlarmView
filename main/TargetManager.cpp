@@ -225,7 +225,10 @@ void TargetManager::press() {
 void TargetManager::doubleClick() {
 	if( id_iter != targets.end() ){
 		team_id = id_iter->first;
-		ESP_LOGI(FNAME,"doubleClick(), target ID locked: %X", team_id );
+		ESP_LOGI(FNAME,"long long press: target ID locked: %X", team_id );
+	}else{
+		ESP_LOGI(FNAME,"long long press: nothing selected so fas, use closest: %X", min_id );
+		team_id = min_id;
 	}
 };
 

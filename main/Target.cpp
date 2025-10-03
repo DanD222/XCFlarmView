@@ -302,9 +302,9 @@ void Target::checkAlarm(){
 
 // --- dumpInfo ---
 void Target::dumpInfo(){
-    ESP_LOGI(FNAME,"Target ID: %06X | Age: %d | Dist: %.2f km | Alt: %d m | Climb: %.1f m/s | Track: %d",
-             pflaa.ID, age, dist, pflaa.relVertical, pflaa.climbRate, pflaa.track);
-    if(reg || comp) ESP_LOGI(FNAME,"  Reg: %s | Comp: %s", reg?reg:"-", comp?comp:"-");
+    // ESP_LOGI(FNAME,"Target ID: %06X | Age: %d | Dist: %.2f km | Alt: %d m | Climb: %.1f m/s | Track: %d",
+    //         pflaa.ID, age, dist, pflaa.relVertical, pflaa.climbRate, pflaa.track);
+    // if(reg || comp) ESP_LOGI(FNAME,"  Reg: %s | Comp: %s", reg?reg:"-", comp?comp:"-");
 }
 
 // --- destructor ---

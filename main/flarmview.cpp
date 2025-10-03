@@ -41,6 +41,42 @@ Switch swDown;
 Switch swMode;
 float zoom=1.0;
 
+RTC_DATA_ATTR int bootMarker;
+
+
+void showText( int ypos, const char*text ){
+	if( text != 0 ){
+		int w=0;
+		char *buf = (char *)malloc(512);
+		memset(buf, 0, 512);
+		memcpy( buf, text, strlen(text));
+		char *p = strtok (buf, " ");
+		char *words[100];
+		while (p != NULL)
+		{
+			words[w++] = p;
+			p = strtok (NULL, " ");
+		}
+		// ESP_LOGI(FNAME,"show text number of words: %d", w);
+		int x=1;
+		int y=ypos;
+		egl->setFont(ucg_font_ncenR14_hr);
+		for( int p=0; p<w; p++ )
+		{
+			int len = egl->getStrWidth( words[p] );
+			// ESP_LOGI(FNAME,"showhelp pix len word #%d = %d, %s ", p, len, words[p]);
+			if( x+len > DISPLAY_W ) {   // does still fit on line
+				y+=25;
+				x=1;
+			}
+			egl->setPrintPos(x, y);
+			egl->print( words[p] );
+			x+=len+5;
+		}
+		free( buf );
+	}
+}
+
 extern "C" void app_main(void)
 {
     initArduino();
@@ -97,16 +133,17 @@ extern "C" void app_main(void)
     	egl->setFont(ucg_font_fub20_hn);
 
     egl->setColor(COLOR_WHITE);
-    egl->setPrintPos( 10, 35 );
+    egl->setPrintPos( 10, 25 );
     egl->print("XCFlarmView 2.0");
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
     	serial1_tx_enable.set(0);
     }
 
-    egl->setPrintPos( 10, 80 );
+    egl->setPrintPos( 10, 50 );
     egl->printf("%s",ver.c_str() );
 
-    egl->setPrintPos( 10, 115 );
+
+    egl->setPrintPos( 10, 150 );
     egl->printf("Flarmnet: %s", FLARMNET_VERSION );
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
@@ -122,7 +159,7 @@ extern "C" void app_main(void)
     	egl->printf("SW-Update");
     }
     else{
-    	egl->setPrintPos( 10, 150 );
+    	egl->setPrintPos( 10, 175 );
     	egl->printf("Press Button for SW-Update");
     }
 
@@ -149,7 +186,16 @@ extern "C" void app_main(void)
     menu = new SetupMenu();
     menu->begin();
     Switch::startTask();
-  
+    ESP_LOGI(FNAME,"Boot Marker: %d", bootMarker );
+    if( inch2dot4 && bootMarker != 123456789 ){
+    	bootMarker = 123456789;
+    	showText( 25, "Short Press (lt 0.2s): Select Next ID" );
+		showText( 85, "Long Press (up to 2s): Setup-Menu");
+    	showText( 145, "Long Long Press (plus 2s): Selected -> Team");
+    	delay(4000);
+        egl->clearScreen();
+    }
+
     egl->clearScreen();
     Flarm::begin();
     Serial::begin();

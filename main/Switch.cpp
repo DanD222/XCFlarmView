@@ -120,10 +120,10 @@ void Switch::tick() {
 			if (dur < 200) {
 				sendPress();
 			}
-			else if (dur > 200 && dur < 1000 ) {
+			else if (dur > 200 && dur < 2000 ) {
 				sendLongPress();
 			}
-			else if (dur > 1000 && dur < 10000) {   // we implement this as a long long click
+			else if (dur > 2000 && dur < 10000) {   // we implement this as a long long click
 				sendDoubleClick();
 			}
 			_state = B_IDLE;
