@@ -194,9 +194,11 @@ void TargetManager::printVersions( int x, int y, const char *prefix, const char 
 		egl->setColor(COLOR_WHITE);
 		info_timer = INFO_TIME;
 	}
+	xSemaphoreTake(display, portMAX_DELAY);
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( "%s %s", prefix, ver );
+	xSemaphoreGive(display);
 }
 
 void TargetManager::clearScreen(){
@@ -235,6 +237,7 @@ void TargetManager::doubleClick() {
 
 void TargetManager::handleFlarmFlags() {
     // --- TX Flag ---
+
     if (Flarm::getTxFlag() || !(_tick % 200)) {
         int tx = Flarm::getTXBit();  // 0 or 1
         ESP_LOGI(FNAME, "TX alarm: %d", tx);
@@ -318,12 +321,14 @@ void TargetManager::handleFlarmFlags() {
         Flarm::resetProgressFlag();
     }
 
+
     // --- Clear info if timer expired ---
     if (info_timer == 1) {
         ESP_LOGI(FNAME, "NOW CLEAR info");
         egl->clearScreen();
         redrawNeeded = true;
     }
+
 }
 
 
@@ -355,9 +360,6 @@ void TargetManager::tick() {
         if (!info_timer && Flarm::connected()) {
             drawAirplane(DISPLAY_W / 2, DISPLAY_H / 2, Flarm::getGndCourse());
         }
-
-        xSemaphoreTake(display, portMAX_DELAY);
-
         // --- Pass 1: Determine proximity and max climb ---
         for (std::map<uint32_t, Target>::iterator it = targets.begin(); it != targets.end(); ++it) {
             Target &tgt = it->second;
@@ -431,7 +433,5 @@ void TargetManager::tick() {
                 }
             }
         }
-
-        xSemaphoreGive(display);
     }
 }

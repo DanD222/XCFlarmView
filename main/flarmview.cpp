@@ -41,8 +41,6 @@ Switch swDown;
 Switch swMode;
 float zoom=1.0;
 
-RTC_DATA_ATTR int bootMarker;
-
 
 void showText( int ypos, const char*text ){
 	if( text != 0 ){
@@ -142,9 +140,9 @@ extern "C" void app_main(void)
     egl->setPrintPos( 10, 50 );
     egl->printf("%s",ver.c_str() );
 
-
-    egl->setPrintPos( 10, 150 );
-    egl->printf("Flarmnet: %s", FLARMNET_VERSION );
+	showText( 100,  "Short Press (lt  0.2s): Select Next ID" );
+	showText( 150,  "Mid   Press (up to 2s): Setup-Menu");
+    showText( 200, "Long  Press (plus  2s): Selected -> Team");
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
       	serial1_tx_enable.set(0);
@@ -153,10 +151,7 @@ extern "C" void app_main(void)
     egl->setFont(ucg_font_ncenR14_hr);
 
     if( inch2dot4 ){
-    	egl->setPrintPos( 10, 240 );
-    	egl->printf("Press Button for");
-    	egl->setPrintPos( 10, 270 );
-    	egl->printf("SW-Update");
+    	showText( 270, "Press Button for SW-Update");
     }
     else{
     	egl->setPrintPos( 10, 175 );
@@ -186,15 +181,6 @@ extern "C" void app_main(void)
     menu = new SetupMenu();
     menu->begin();
     Switch::startTask();
-    ESP_LOGI(FNAME,"Boot Marker: %d", bootMarker );
-    if( inch2dot4 && bootMarker != 123456789 ){
-    	bootMarker = 123456789;
-    	showText( 25, "Short Press (lt 0.2s): Select Next ID" );
-		showText( 85, "Long Press (up to 2s): Setup-Menu");
-    	showText( 145, "Long Long Press (plus 2s): Selected -> Team");
-    	delay(4000);
-        egl->clearScreen();
-    }
 
     egl->clearScreen();
     Flarm::begin();
