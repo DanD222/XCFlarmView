@@ -140,9 +140,9 @@ extern "C" void app_main(void)
     egl->setPrintPos( 10, 50 );
     egl->printf("%s",ver.c_str() );
 
-	showText( 100,  "Short Press (lt  0.2s): Select Next ID" );
-	showText( 150,  "Mid   Press (up to 2s): Setup-Menu");
-    showText( 200, "Long  Press (plus  2s): Selected -> Team");
+	showText( 100,  "Short Press (<0.2s):   Select Next ID" );
+	showText( 150,  "Medium Press (<2s) : Setup-Menu");
+    showText( 200,  "Long Press (>2s)   : Selected mark Team");
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
       	serial1_tx_enable.set(0);
@@ -163,7 +163,7 @@ extern "C" void app_main(void)
     swMode.begin(GPIO_NUM_34, B_MODE );
 
 
-    for(int i=0; i<30; i++){  // 40
+    for(int i=0; i<40; i++){
     	if( swMode.isClosed() || swUp.isClosed() || swDown.isClosed() ){
     		egl->clearScreen();
     		ota = new OTA();
@@ -186,7 +186,7 @@ extern "C" void app_main(void)
     Flarm::begin();
     Serial::begin();
     TM.begin();
-    Buzzer::play( BUZZ_DH, 150,audio_volume.get());
+    Buzzer::play( BUZZ_DH, 250,audio_volume.get());
 
     ESP_LOGI(FNAME,"Team ID: %X", team_id.get() );
 

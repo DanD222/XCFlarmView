@@ -249,7 +249,7 @@ void TargetManager::handleFlarmFlags() {
     if (Flarm::getRxFlag()) {
         int rx = Flarm::getRXNum();
         char txt[16];
-        sprintf(txt, " RX %d ", rx);
+        sprintf(txt, "  RX %d", rx);
         printAlarm(txt, DISPLAY_W - egl->getStrWidth(txt) - 5, DISPLAY_H - 60, rx != 0, {COLOR_GREEN});
         Flarm::resetRxFlag();
     }
