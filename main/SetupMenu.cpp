@@ -237,15 +237,9 @@ void SetupMenu::showMenu(){
 	if( (_parent == 0) && (highlight == -1) ) // entering setup menu root
 	{
 		ESP_LOGI(FNAME,"Check End Setup Menu");
-		if( enable_restart ){
+		if( selected->get_restart() ){
 			ESP_LOGI(FNAME,"Restart enabled");
-			if( selected->get_restart() )
-				selected->restart();
-			esp_restart();
-		}else{
-			ESP_LOGI(FNAME,"Now enable Restart");
-			delay(100);
-			enable_restart = true;
+			selected->restart();
 		}
 	}
 	ESP_LOGI(FNAME,"end showMenu()");
@@ -261,11 +255,14 @@ void SetupMenu::longPress(){
 	}
 	if( !_menu_active ){     // use long press to start setup in 2.4 inch
 		_menu_active = true;
+		delay(100);
+		clear();
+		showMenu();
 	}else{
 		_menu_active = false;
+		delay(100);
+		clear();
 	}
-	showMenu();
-	delay(100);
 	ESP_LOGI(FNAME,"End Longpress()");
 }
 
@@ -277,10 +274,15 @@ void SetupMenu::press(){
 		ESP_LOGI(FNAME,"Not me: %s return()", _title  );
 		return;
 	}
-	if( _menu_active ){ // react also to short press inside setup menu
-		showMenu();
+	if( _menu_active ){     // use long press to start setup in 2.4 inch
+		if( (_parent == 0) && (highlight == -1) ){  // setup main root also leave by short press
+			_menu_active = false;
+			delay(100);
+			clear();
+		}else{
+			showMenu();
+		}
 	}
-
 	// ESP_LOGI(FNAME,"End press()");
 }
 

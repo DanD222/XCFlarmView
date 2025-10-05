@@ -30,12 +30,14 @@ bool TargetManager::erase_info = false;
 unsigned int TargetManager::team_id = 0;
 int TargetManager::info_timer = 0;
 float TargetManager::old_radius=0.0;
-xSemaphoreHandle display=NULL;
+xSemaphoreHandle _display=NULL;
+xSemaphoreHandle _pflaa_receive=NULL;
 
 #define INFO_TIME (5*(1000/TASKPERIOD)/DISPLAYTICK)  // all ~10 sec
 
 void TargetManager::begin(){
-	display=xSemaphoreCreateMutex();
+	_display=xSemaphoreCreateMutex();
+	_pflaa_receive=xSemaphoreCreateMutex();
 	xTaskCreatePinnedToCore(&taskTargetMgr, "taskTargetMgr", 4096, NULL, 10, &pid, 0);
 	attach( this );
 }
@@ -58,14 +60,14 @@ void TargetManager::receiveTarget( nmea_pflaa_s &pflaa ){
 	if( (pflaa.groundSpeed < 10) && (display_non_moving_target.get() == NON_MOVE_HIDE) ){
 			return;
 	}
-	xSemaphoreTake(display,portMAX_DELAY );
+	xSemaphoreTake(_pflaa_receive,portMAX_DELAY );
 	if( targets.find(pflaa.ID) == targets.end() ){
 		targets[ pflaa.ID ] = Target ( pflaa );
 	}
 	else
 		targets[ pflaa.ID ].update( pflaa );
 	targets[ pflaa.ID ].dumpInfo();
-	xSemaphoreGive(display);
+	xSemaphoreGive(_pflaa_receive);
 }
 
 TargetManager::~TargetManager() {
@@ -91,7 +93,7 @@ void TargetManager::drawAirplane(int x, int y, float north) {
     if (SetupMenu::isActive())
         return;
 
-    xSemaphoreTake(display, portMAX_DELAY);
+    xSemaphoreTake(_display, portMAX_DELAY);
 
     // --- Draw airplane body ---
     egl->setColor(COLOR_WHITE);
@@ -126,23 +128,22 @@ void TargetManager::drawAirplane(int x, int y, float north) {
 
     old_radius = new_radius;
 
-    xSemaphoreGive(display);
+    xSemaphoreGive(_display);
 }
 
 
 void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_color_t color ){
 	// ESP_LOGI(FNAME,"printAlarm: %s, x:%d y:%d", alarm, x,y );
-	xSemaphoreTake(display,portMAX_DELAY );
+	xSemaphoreTake(_display,portMAX_DELAY );
 	if( print ){
 		egl->setColor( color ); // G=0 R=255 B=0  RED Color
 	}else{
 		egl->setColor(COLOR_BLACK);
 	}
-	egl->setPrintPos( x, y );
-
 	egl->setFont(ucg_font_ncenR14_hr);
+	egl->setPrintPos( x, y );
 	egl->printf( alarm );
-	xSemaphoreGive(display);
+	xSemaphoreGive(_display);
 }
 
 /*
@@ -154,7 +155,7 @@ void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_
 */
 
 void TargetManager::printAlarmLevel( const char*alarm, int x, int y, int level ){
-	xSemaphoreTake(display,portMAX_DELAY );
+	xSemaphoreTake(_display,portMAX_DELAY );
 	if( level == 0 ){
 		egl->setColor(COLOR_BLACK); // G=0 R=255 B=0  RED Color
 	}else if( level == 1 ){
@@ -167,7 +168,7 @@ void TargetManager::printAlarmLevel( const char*alarm, int x, int y, int level )
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( alarm );
-	xSemaphoreGive(display);
+	xSemaphoreGive(_display);
 }
 
 void TargetManager::nextTarget(int timer){
@@ -194,21 +195,23 @@ void TargetManager::printVersions( int x, int y, const char *prefix, const char 
 		egl->setColor(COLOR_WHITE);
 		info_timer = INFO_TIME;
 	}
-	xSemaphoreTake(display, portMAX_DELAY);
+	xSemaphoreTake(_display, portMAX_DELAY);
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( "%s %s", prefix, ver );
-	xSemaphoreGive(display);
+	xSemaphoreGive(_display);
 }
 
 void TargetManager::clearScreen(){
+	xSemaphoreTake(_display, portMAX_DELAY);
 	egl->clearScreen();
+	xSemaphoreGive(_display);
 	// redrawNeeded = true;
 }
 
 void TargetManager::rewindInfoTimer(){
 	if( info_timer == 0 )
-		egl->clearScreen();
+		clearScreen();
 	ESP_LOGI(FNAME,"rewindInfoTimer() %d", info_timer );
 	info_timer = INFO_TIME;
 }
@@ -234,6 +237,23 @@ void TargetManager::doubleClick() {
 	}
 };
 
+void TargetManager::printRX(){
+	// --- RX Flag ---
+	if (Flarm::getRxFlag() ) {
+		xSemaphoreTake(_display,portMAX_DELAY );
+		int rx = Flarm::getRXNum();
+		if( rx > 0 ){
+			egl->setColor(COLOR_GREEN); // G=0 R=255 B=0  RED Color
+		}else{
+			egl->setColor(COLOR_BLACK);
+		}
+		egl->setFont(ucg_font_ncenR14_hr);
+		egl->setPrintPos( 5, DISPLAY_H - 60 );
+		egl->printf( "RX %d  ", rx );
+		xSemaphoreGive(_display);
+		Flarm::resetRxFlag();
+	}
+}
 
 void TargetManager::handleFlarmFlags() {
     // --- TX Flag ---
@@ -245,14 +265,7 @@ void TargetManager::handleFlarmFlags() {
         Flarm::resetTxFlag();
     }
 
-    // --- RX Flag ---
-    if (Flarm::getRxFlag()) {
-        int rx = Flarm::getRXNum();
-        char txt[16];
-        sprintf(txt, "  RX %d", rx);
-        printAlarm(txt, DISPLAY_W - egl->getStrWidth(txt) - 5, DISPLAY_H - 60, rx != 0, {COLOR_GREEN});
-        Flarm::resetRxFlag();
-    }
+
 
     // --- GPS Flag ---
     if (Flarm::getGPSFlag() || !(_tick % 200)) {
@@ -266,7 +279,7 @@ void TargetManager::handleFlarmFlags() {
     if (Flarm::getConnectedFlag()) {
         bool conn = Flarm::connected();
         ESP_LOGI(FNAME, "Flarm connected alarm: %d", !conn);
-        egl->clearScreen();
+        clearScreen();
         printAlarm("NO FLARM", 10, 140, !conn);
         Flarm::resetConnectedFlag();
     }
@@ -311,21 +324,20 @@ void TargetManager::handleFlarmFlags() {
     // --- Operation Progress ---
     if (Flarm::getProgressFlag()) {
         rewindInfoTimer();
-        xSemaphoreTake(display, portMAX_DELAY);
+        xSemaphoreTake(_display, portMAX_DELAY);
         egl->setColor(COLOR_WHITE);
         egl->setFont(ucg_font_ncenR14_hr);
         egl->setPrintPos(10, 60);
         egl->printf("%s: %d %%", Flarm::getOperationString(Flarm::getOperationKey()),
                     Flarm::getProgress());
-        xSemaphoreGive(display);
+        xSemaphoreGive(_display);
         Flarm::resetProgressFlag();
     }
-
 
     // --- Clear info if timer expired ---
     if (info_timer == 1) {
         ESP_LOGI(FNAME, "NOW CLEAR info");
-        egl->clearScreen();
+        clearScreen();
         redrawNeeded = true;
     }
 
@@ -345,7 +357,7 @@ void TargetManager::tick() {
     if (!(_tick % 20)) { // every 50 ms * 20 = 1 s
         ESP_LOGI(FNAME, "Num targets: %d", targets.size());
     }
-    if (!(_tick % 60)) { // every 50 ms * 60 = 3 s
+    if (!(_tick % 30)) { // every 50 ms * 30 = 1.5 s
         redrawNeeded = true;
     }
 
@@ -366,7 +378,6 @@ void TargetManager::tick() {
             tgt.ageTarget();
 
             if (SetupMenu::isActive()) {
-                xSemaphoreGive(display);
                 return;
             }
 
@@ -397,7 +408,6 @@ void TargetManager::tick() {
                 Target &tgt = it->second;
 
                 if (SetupMenu::isActive()) {
-                    xSemaphoreGive(display);
                     return;
                 }
 
@@ -433,5 +443,6 @@ void TargetManager::tick() {
                 }
             }
         }
+        printRX();
     }
 }

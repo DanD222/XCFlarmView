@@ -150,8 +150,8 @@ void SetupMenuSelect::display( int mode ){
 		showhelp( y );
 		if(mode == 1 && bits._save == true ){
 			egl->setColor( COLOR_BLACK );
-			egl->drawBox( 1,DISPLAY_H-40,DISPLAY_W,40 );
-			egl->setPrintPos( 1, DISPLAY_H-30 );
+			egl->drawBox( 1,DISPLAY_H-30,DISPLAY_W,40 );
+			egl->setPrintPos( 1, DISPLAY_H-20 );
 			egl->setColor( COLOR_WHITE );
 			egl->print(PROGMEM"Saved        " );
 		}

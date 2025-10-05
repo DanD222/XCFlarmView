@@ -43,6 +43,7 @@ private:
 	static void drawN( int x, int y, bool erase, float north, float azoom );
 	static void printAlarm( const char*alarm, int x, int y, bool print, ucg_color_t color={ COLOR_RED } );
 	static void printAlarmLevel( const char*alarm, int x, int y, int level );
+	static void printRX();
 	static void nextTarget(int timer);
 	static void taskTargetMgr(void *pvParameters);
 	static void printVersions( int x, int y, const char *prefix, const char *ver, int len );

@@ -24,7 +24,7 @@ MenuEntry* MenuEntry::root = 0;
 MenuEntry* MenuEntry::selected = 0;
 bool MenuEntry::_restart = false;
 
-
+extern xSemaphoreHandle _display;
 xSemaphoreHandle spiMutex=NULL;
 
 MenuEntry::~MenuEntry()
@@ -193,11 +193,13 @@ void MenuEntry::showhelp( int y ){
 void MenuEntry::clear()
 {
 	// ESP_LOGI(FNAME,"MenuEntry::clear");
+	xSemaphoreTake(_display, portMAX_DELAY);
 	egl->setColor(COLOR_BLACK);
 	egl->drawBox( 0,0,DISPLAY_W,DISPLAY_H );
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( 1, 30 );
 	egl->setColor(COLOR_WHITE);
+	xSemaphoreGive(_display);
 }
 
 

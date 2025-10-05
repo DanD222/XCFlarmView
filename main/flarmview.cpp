@@ -140,9 +140,10 @@ extern "C" void app_main(void)
     egl->setPrintPos( 10, 50 );
     egl->printf("%s",ver.c_str() );
 
-	showText( 100,  "Short Press (<0.2s):   Select Next ID" );
-	showText( 150,  "Medium Press (<2s) : Setup-Menu");
-    showText( 200,  "Long Press (>2s)   : Selected mark Team");
+	showText( 100,  "ID-Button Actions:" );
+	showText( 125,  "Short  (<0.3s): Next ID" );
+	showText( 150,  "Medium (<2s)  : Setup");
+    showText( 175,  "Long   (>2s)  : Mark Team");
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
       	serial1_tx_enable.set(0);

@@ -27,7 +27,7 @@ unsigned int Target::old_alt = 100000;
 unsigned int Target::old_id = 0;
 int Target::old_var = -10000;
 int Target::blink = 0;
-extern xSemaphoreHandle display;
+extern xSemaphoreHandle _display;
 
 // Helper clamp for ESP32 (C++11 compatibility)
 template<typename T>
@@ -105,7 +105,7 @@ void Target::redrawInfo(){
 void Target::drawInfo(bool erase) {
 	char buf[32] = {0};
 	if (pflaa.ID == 0) return;
-	xSemaphoreTake(display, portMAX_DELAY);
+	xSemaphoreTake(_display, portMAX_DELAY);
 
 	// --- Distance ---
 	if ((old_dist != (int)(dist * 100)) || erase) {
@@ -182,7 +182,7 @@ void Target::drawInfo(bool erase) {
 
 	egl->setPrintPos(5, DISPLAY_H - 37);
 	egl->printf("Alt %s", Units::AltitudeUnit());
-	xSemaphoreGive(display);
+	xSemaphoreGive(_display);
 }
 
 
