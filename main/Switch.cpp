@@ -145,7 +145,7 @@ void Switch::tick() {
 }
 
 void Switch::sendPress(){
-	ESP_LOGI(FNAME,"send press p: %ld", millis()-p_time );
+	ESP_LOGI(FNAME,"send press");
 	for (auto &observer : observers){
 		if( _mode == B_MODE ){
 			observer->press();
@@ -161,7 +161,7 @@ void Switch::sendPress(){
 }
 
 void Switch::sendLongPress(){
-	ESP_LOGI(FNAME,"send longPress %ld", millis()-p_time );
+	ESP_LOGI(FNAME,"send longPress");
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
 			observer->longPress();
@@ -176,10 +176,16 @@ void Switch::sendLongPress(){
 }
 
 void Switch::sendLongLongPress(){
-	ESP_LOGI(FNAME,"send long long press p:%ld", millis()-p_time );
+	ESP_LOGI(FNAME,"send long long press");
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
 			observer->doubleClick();
+		}
+		else if( _mode == B_UP ){
+			observer->up(1);
+		}
+		else if( _mode == B_DOWN ){
+			observer->down(1);
 		}
 	// ESP_LOGI(FNAME,"End long pressed action");
 }
