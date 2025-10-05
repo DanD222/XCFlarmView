@@ -122,23 +122,22 @@ void Switch::tick() {
 		case B_PRESSED:
 			if (isOpen()) {
 				int dur = currentMillis - p_time;
-				ESP_LOGI(FNAME,"OPEN, dur=%d",dur );
 				// Button pressed longer as 300 mS
 				if (dur < 300) {
-					sendPress();
+					sendPress(dur);
 					_holddown = 5;  // 50 mS debounce
 				}
 				else if (dur > 300 && dur < 2000 ) {
-					sendLongPress();
+					sendLongPress(dur);
 					_holddown = 5;
 				}
 				_state = B_IDLE;
 			}
 			else{
 				int dur = currentMillis - p_time;
-				ESP_LOGI(FNAME,"STILL CLOSED, but dur=%d",dur );
+				// ESP_LOGI(FNAME,"STILL CLOSED, but dur=%d",dur );
 				if (dur > 2000) {   // we implement this as a long long click
-					sendLongLongPress();
+					sendLongLongPress(dur);
 					_holddown = 5;
 					_state = B_PRESSED_STILL;
 				}
@@ -155,8 +154,8 @@ void Switch::tick() {
 	}
 }
 
-void Switch::sendPress(){
-	ESP_LOGI(FNAME,"send press");
+void Switch::sendPress(int dur){
+	ESP_LOGI(FNAME,"send press (%d ms)", dur);
 	for (auto &observer : observers){
 		if( _mode == B_MODE ){
 			observer->press();
@@ -168,11 +167,10 @@ void Switch::sendPress(){
 			observer->down(1);
 		}
 	}
-	// ESP_LOGI(FNAME,"End pressed action");
 }
 
-void Switch::sendLongPress(){
-	ESP_LOGI(FNAME,"send longPress");
+void Switch::sendLongPress(int dur){
+	ESP_LOGI(FNAME,"send longPress (%d ms)", dur);
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
 			observer->longPress();
@@ -183,11 +181,10 @@ void Switch::sendLongPress(){
 		else if( _mode == B_DOWN ){
 			observer->down(1);
 		}
-	// ESP_LOGI(FNAME,"End long pressed action");
 }
 
-void Switch::sendLongLongPress(){
-	ESP_LOGI(FNAME,"send long long press");
+void Switch::sendLongLongPress(int dur){
+	ESP_LOGI(FNAME,"send long long press (%d ms)", dur);
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
 			observer->longLongPress();
@@ -198,7 +195,6 @@ void Switch::sendLongLongPress(){
 		else if( _mode == B_DOWN ){
 			observer->down(1);
 		}
-	// ESP_LOGI(FNAME,"End long pressed action");
 }
 
 

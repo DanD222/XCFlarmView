@@ -30,9 +30,9 @@ public:
 	void tick();   // call al least every 100 mS
 	static void attach( SwitchObserver *obs);
 	static void detach( SwitchObserver *obs);
-	void sendPress();
-	void sendLongPress();
-	void sendLongLongPress();
+	void sendPress(int dur);
+	void sendLongPress(int dur);
+	void sendLongLongPress(int dur);
 	static void startTask();
 
 private:
