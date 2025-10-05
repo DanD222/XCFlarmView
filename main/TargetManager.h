@@ -27,7 +27,7 @@ public:
 	void press();
 	void up(int n) {};
 	void down(int n) {};
-	void doubleClick();
+	void longLongPress();
 	static void handleFlarmFlags();
 	static void handleFlarmAlarms();
 	static void handleFlarmVersions();

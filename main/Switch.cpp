@@ -121,23 +121,34 @@ void Switch::tick() {
 
 		case B_PRESSED:
 			if (isOpen()) {
-
 				int dur = currentMillis - p_time;
 				ESP_LOGI(FNAME,"OPEN, dur=%d",dur );
-				// Wenn der Button länger als <N> gedrückt wird, ist es ein Langdruck
+				// Button pressed longer as 300 mS
 				if (dur < 300) {
 					sendPress();
-					_holddown = 5;  // 50 mS
+					_holddown = 5;  // 50 mS debounce
 				}
 				else if (dur > 300 && dur < 2000 ) {
 					sendLongPress();
 					_holddown = 5;
 				}
-				else if (dur > 2000 && dur < 10000) {   // we implement this as a long long click
+				_state = B_IDLE;
+			}
+			else{
+				int dur = currentMillis - p_time;
+				ESP_LOGI(FNAME,"STILL CLOSED, but dur=%d",dur );
+				if (dur > 2000) {   // we implement this as a long long click
 					sendLongLongPress();
 					_holddown = 5;
+					_state = B_PRESSED_STILL;
 				}
+			}
+			break;
+
+		case B_PRESSED_STILL:
+			if (isOpen()) {
 				_state = B_IDLE;
+				_holddown = 5;
 			}
 			break;
 		}
@@ -179,7 +190,7 @@ void Switch::sendLongLongPress(){
 	ESP_LOGI(FNAME,"send long long press");
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
-			observer->doubleClick();
+			observer->longLongPress();
 		}
 		else if( _mode == B_UP ){
 			observer->up(1);

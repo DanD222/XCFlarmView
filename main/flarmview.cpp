@@ -142,8 +142,8 @@ extern "C" void app_main(void)
 
 	showText( 100,  "ID-Button Actions:" );
 	showText( 125,  "Short  (<0.3s): Next ID" );
-	showText( 150,  "Medium (<2s)  : Setup");
-    showText( 175,  "Long   (>2s)  : Mark Team");
+	showText( 150,  "Long   (>0.3s): Setup");
+    showText( 175,  "Hold   (>2s)  : Mark Team");
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
       	serial1_tx_enable.set(0);

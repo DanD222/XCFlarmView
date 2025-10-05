@@ -33,7 +33,7 @@ public:
 	virtual void release() { display(); };
 	virtual void longPress() {};
 	virtual void press() {};
-	virtual void doubleClick() {};
+	virtual void longLongPress() {};
 	virtual const char* value() = 0;
     MenuEntry* getFirst() const;
 	MenuEntry* addEntry( MenuEntry * item );

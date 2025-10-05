@@ -17,7 +17,7 @@
 
 class SwitchObserver;
 
-typedef enum e_button_state { B_IDLE, B_PRESSED } t_button_state;
+typedef enum e_button_state { B_IDLE, B_PRESSED, B_PRESSED_STILL } t_button_state;
 typedef enum e_button       { B_MODE, B_UP, B_DOWN } t_button;
 
 class Switch {
@@ -63,7 +63,7 @@ public:
 	virtual void up(int count) = 0;
 	virtual void down(int count) = 0;
 	virtual void longPress() = 0;
-	virtual void doubleClick() = 0;
+	virtual void longLongPress() = 0;
 	virtual ~SwitchObserver() {};
 	void attach( SwitchObserver *instance)  { Switch::attach( instance ); };
 	void detach( SwitchObserver *instance)  { Switch::detach( instance ); };

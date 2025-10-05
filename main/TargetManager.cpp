@@ -227,7 +227,7 @@ void TargetManager::press() {
 	}
 };
 
-void TargetManager::doubleClick() {
+void TargetManager::longLongPress() {
 	if( id_iter != targets.end() ){
 		team_id = id_iter->first;
 		ESP_LOGI(FNAME,"long long press: target ID locked: %X", team_id );
