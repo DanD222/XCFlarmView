@@ -32,7 +32,7 @@ public:
 	static void detach( SwitchObserver *obs);
 	void sendPress();
 	void sendLongPress();
-	void sendDoubleClick();
+	void sendLongLongPress();
 	static void startTask();
 
 private:

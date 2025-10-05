@@ -134,7 +134,7 @@ void Switch::tick() {
 					_holddown = 5;
 				}
 				else if (dur > 2000 && dur < 10000) {   // we implement this as a long long click
-					sendDoubleClick();
+					sendLongLongPress();
 					_holddown = 5;
 				}
 				_state = B_IDLE;
@@ -175,7 +175,7 @@ void Switch::sendLongPress(){
 	// ESP_LOGI(FNAME,"End long pressed action");
 }
 
-void Switch::sendDoubleClick(){
+void Switch::sendLongLongPress(){
 	ESP_LOGI(FNAME,"send long long press p:%ld", millis()-p_time );
 	for (auto &observer : observers)
 		if( _mode == B_MODE ){
