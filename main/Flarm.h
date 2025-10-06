@@ -68,9 +68,7 @@ public:
 	static void parsePGRMZ( const char *pgrmz );
 	static void drawAirplane( int x, int y, bool fromBehind=false, bool smallSize=false );
 	static inline int alarmLevel(){ return AlarmLevel; };
-	static void drawDownloadInfo();
-	static void drawFlarmWarning();
-	static void initFlarmWarning();
+	// static void drawDownloadInfo();
 	static void progress();
 	static bool connected() { return _connected; };     // returns true if Flarm is connected
 	static inline bool getGPS( float &gndSpeedKmh, float &gndTrack ) {
@@ -141,9 +139,7 @@ public:
 private:
 	static int calcNMEACheckSum(const char *nmea);
 	static int getNMEACheckSum(const char *nmea);
-	static void drawClearTriangle( int x, int y, int rb, int dist, int size, int factor );
-	static void drawClearVerticalTriangle( int x, int y, int rb, int dist, int size, int factor );
-	static void drawTriangle( int x, int y, int rb, int dist, int size=15, int factor=2, bool erase=false );
+
 	static void flarmSim();
 	static void pflau_timeout();
 
