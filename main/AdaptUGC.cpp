@@ -163,7 +163,6 @@ void  AdaptUGC::begin() {
 	}
 	setRedBlueTwist(true);
 #endif
-	invertDisplay(true);
 	ESP_LOGI(FNAME, "eglib_Send() &eglib:%x  hal-driv:%x config:%x\n", (unsigned int)eglib, (unsigned int)&esp32_ili9341, (unsigned int)&esp32_ili9341_config );
 	eglib_Init( &myeglib, &esp32_ili9341, &esp32_ili9341_config, &ili9341, &ili9341_config );
 	setClipRange( 0,0, DISPLAY_W, DISPLAY_H );
