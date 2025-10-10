@@ -4,11 +4,13 @@
 #include <algorithm>
 #include <esp_log.h>
 
+
 #define FNAME "Switch"
 
 std::list<SwitchObserver*> Switch::observers;
 std::list<Switch*> Switch::instances;
 TaskHandle_t Switch::pid = nullptr;
+extern bool inch2dot4;
 
 #define REPEAT_DELAY_MS 500     // Time to first repeat
 #define REPEAT_RATE_MS  200     // Repeat intervall
@@ -67,7 +69,13 @@ void Switch::notifyObserversPress() {
 
 void Switch::sendPress(int dur) {
     ESP_LOGI(FNAME, "Press (%d ms)", dur);
-    notifyObserversPress();
+    if( inch2dot4 ){
+       notifyObserversPress();
+    }else{ // 1.4 inch display
+       for (auto& obs : observers){ obs->down(1);
+       	   ESP_LOGI(FNAME, "send obs %p press, key-nr: %d", obs, _mode );
+       }
+    }
 }
 
 void Switch::sendLongPress(int dur) {

@@ -36,8 +36,10 @@ TargetManager TM;
 
 SetupMenu *menu=0;
 bool inch2dot4=false;
+#if( DISPLAY_W == 240 )
 Switch swUp;
 Switch swDown;
+#endif
 Switch swMode;
 float zoom=1.0;
 
@@ -158,14 +160,22 @@ extern "C" void app_main(void)
     	egl->setPrintPos( 10, 175 );
     	egl->printf("Press Button for SW-Update");
     }
-
-    swUp.begin(GPIO_NUM_0, B_UP );
-    swDown.begin(GPIO_NUM_3, B_DOWN );
-    swMode.begin(GPIO_NUM_34, B_MODE );
-
+    if( inch2dot4 ){
+		#if( DISPLAY_W == 240 )
+    	swUp.begin(GPIO_NUM_0, B_UP );
+    	swDown.begin(GPIO_NUM_3, B_DOWN );
+		#endif
+        swMode.begin(GPIO_NUM_34, B_MODE );
+    }else{
+    	swMode.begin(GPIO_NUM_0, B_MODE );
+    }
 
     for(int i=0; i<40; i++){
+#if( DISPLAY_W == 240 )
     	if( swMode.isClosed() || swUp.isClosed() || swDown.isClosed() ){
+#else
+    	if( swMode.isClosed() ){
+#endif
     		egl->clearScreen();
     		ota = new OTA();
     		ota->doSoftwareUpdate();
