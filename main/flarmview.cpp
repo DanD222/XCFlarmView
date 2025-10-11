@@ -133,13 +133,13 @@ extern "C" void app_main(void)
     	egl->setFont(ucg_font_fub20_hn);
 
     egl->setColor(COLOR_WHITE);
-    egl->setPrintPos( 10, 25 );
+    egl->setPrintPos( 10, 30 );
     egl->print("XCFlarmView 2.0");
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
     	serial1_tx_enable.set(0);
     }
 
-    egl->setPrintPos( 10, 50 );
+    egl->setPrintPos( 10, 55 );
     egl->printf("%s",ver.c_str() );
 
 	showText( 100,  "ID-Button Actions:" );

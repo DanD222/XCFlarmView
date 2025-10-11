@@ -156,7 +156,11 @@ void SetupMenu::display( int mode ){
 	showhelp( y );
 }
 
+#if( DISPLAY_W == 240 )
 void SetupMenu::up(int count){
+#else
+void SetupMenu::down(int count){
+#endif
 	if( selected != this ){
 		return;
 	}
@@ -181,7 +185,11 @@ void SetupMenu::up(int count){
 	pressed = true;
 }
 
+#if( DISPLAY_W == 240 )
 void SetupMenu::down(int count){
+#else
+void SetupMenu::up(int count){
+#endif
 	if( selected != this)
 		return;
 	if( !_menu_active ){

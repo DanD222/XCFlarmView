@@ -3,7 +3,7 @@
 #include "driver/gpio.h"
 #include <algorithm>
 #include <esp_log.h>
-
+#include <SetupMenu.h>
 
 #define FNAME "Switch"
 
@@ -72,7 +72,13 @@ void Switch::sendPress(int dur) {
     if( inch2dot4 ){
        notifyObserversPress();
     }else{ // 1.4 inch display
-       for (auto& obs : observers){ obs->down(1);
+
+       for (auto& obs : observers){
+    	   if( SetupMenu::isActive() )
+    		   obs->up(1);
+    	   else
+    		   obs->press();
+       	   // obs->press();
        	   ESP_LOGI(FNAME, "send obs %p press, key-nr: %d", obs, _mode );
        }
     }
