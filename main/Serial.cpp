@@ -38,6 +38,7 @@ some sentences might be lost or truncated.
 
 bool Serial::_selfTest = false;
 EventGroupHandle_t Serial::rxTxNotifier = 0;
+extern xSemaphoreHandle _display;
 
 // Event group bits
 #define RX0_CHAR 1
@@ -270,9 +271,11 @@ void Serial::huntBaudrate(){
 		}
 		uart_set_baudrate(uart_num, baud[baudrate]);
 		if( !SetupMenu::isActive() ){
+			xSemaphoreTake(_display, portMAX_DELAY);
 			egl->setColor(COLOR_WHITE);
 			egl->setPrintPos( 10, 40 );
 			egl->printf("Autobaud: %d    ", baud[baudrate] );
+			xSemaphoreGive(_display);
 		}
 		ESP_LOGI(FNAME,"Serial Interface ttyS1 next baudrate: %d", baud[baudrate] );
 	}
