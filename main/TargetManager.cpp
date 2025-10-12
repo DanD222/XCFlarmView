@@ -415,10 +415,13 @@ void TargetManager::tick() {
 
                 if (!id_timer) tgt.nearest(it->first == min_id);
 
-                bool displayTarget = (tgt.getAge() < AGEOUT) &&
-                    ((display_mode.get() == DISPLAY_MULTI) ||
-                     ((display_mode.get() == DISPLAY_SIMPLE) && tgt.isNearest()));
-
+                bool displayTarget = tgt.haveAlarm();
+                if( !displayTarget ){
+                	if( display_mode.get() == DISPLAY_SIMPLE )
+                		displayTarget = tgt.isNearest();
+                	else
+                		displayTarget = tgt.getAge() < AGEOUT;
+                }
                 if (displayTarget) {
                     if (tgt.isNearest() || tgt.haveAlarm()) {
                         if (redrawNeeded) {

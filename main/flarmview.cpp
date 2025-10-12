@@ -121,7 +121,7 @@ extern "C" void app_main(void)
     DM.begin( egl );
 
     Version V;
-    std::string ver( "SW Ver.: " );
+    std::string ver = std::string("XCF") + (inch2dot4 ? "2.4" : "1.4") + " SW: ";
     ver += V.version();
 
     if( DISPLAY_W == 240 )
@@ -133,19 +133,17 @@ extern "C" void app_main(void)
     	egl->setFont(ucg_font_fub20_hn);
 
     egl->setColor(COLOR_WHITE);
-    egl->setPrintPos( 10, 30 );
-    egl->print("XCFlarmView 2.0");
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
     	serial1_tx_enable.set(0);
     }
 
-    egl->setPrintPos( 10, 55 );
+    egl->setPrintPos( 10, 30 );
     egl->printf("%s",ver.c_str() );
 
-	showText( 100,  "ID-Button Actions:" );
-	showText( 125,  "Short  (<0.3s): Next ID" );
-	showText( 150,  "Long   (>0.3s): Setup");
-    showText( 175,  "Hold   (>2s)  : Mark Team");
+	showText( 60,  "ID-Button Actions:" );
+	showText( 80,  "Short  (<0.3s): Next ID" );
+	showText( 100,  "Long   (>0.3s): Setup");
+    showText( 120,  "Hold   (>2s)  : Mark Team");
 
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
       	serial1_tx_enable.set(0);
@@ -153,13 +151,13 @@ extern "C" void app_main(void)
 
     egl->setFont(ucg_font_ncenR14_hr);
 
-    if( inch2dot4 ){
-    	showText( 270, "Press Button for SW-Update");
-    }
-    else{
-    	egl->setPrintPos( 10, 175 );
-    	egl->printf("Press Button for SW-Update");
-    }
+    const char updatetxt[] = "Press Button for SW-Update";
+    int x,y;
+    if( inch2dot4 ) {x = 0; y = 270;}
+    else    		{x = 10;y = 165;}
+    egl->setPrintPos( x, y );
+    egl->printf(updatetxt);
+
     if( inch2dot4 ){
 		#if( DISPLAY_W == 240 )
     	swUp.begin(GPIO_NUM_0, B_UP );

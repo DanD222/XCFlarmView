@@ -150,7 +150,7 @@ void SetupMenuSelect::display( int mode ){
 		showhelp( y );
 		if(mode == 1 && bits._save == true ){
 			egl->setColor( COLOR_BLACK );
-			egl->drawBox( 1,DISPLAY_H-30,DISPLAY_W,40 );
+			egl->drawBox( 1,DISPLAY_H-60,DISPLAY_W,60 );
 			egl->setPrintPos( 1, DISPLAY_H-20 );
 			egl->setColor( COLOR_WHITE );
 			egl->print(PROGMEM"Saved        " );
@@ -160,7 +160,11 @@ void SetupMenuSelect::display( int mode ){
 	}
 }
 
+#if( DISPLAY_W == 240 )
 void SetupMenuSelect::up(int count){
+#else
+void SetupMenuSelect::down(int count){
+#endif
 	if( (selected != this)  )
 		return;
 	if( _numval > 9 ){
@@ -183,7 +187,11 @@ void SetupMenuSelect::up(int count){
 	}
 }
 
+#if( DISPLAY_W == 240 )
 void SetupMenuSelect::down(int count){
+#else
+void SetupMenuSelect::up(int count){
+#endif
 	if( (selected != this) )
 		return;
 	if( _numval > 9 )

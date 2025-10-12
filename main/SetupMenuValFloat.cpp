@@ -143,7 +143,11 @@ void SetupMenuValFloat::up( int count ){
 	_value = _nvs->get();
 	_value += step( _step );
 	if( _value > _max ) {
+#if( DISPLAY_W == 240 )
 		_value = _max;
+#else
+		_value = 0.0;
+#endif
 	}
 	_nvs->set(_value );
 	displayVal();
