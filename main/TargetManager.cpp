@@ -256,6 +256,7 @@ void TargetManager::printRX(){
 				egl->setPrintPos( 5, 75 );
 				egl->setColor(COLOR_BLACK);
 				egl->printf( "RX %d  ", rx_old );
+				rx_old = -1;
 			}
 			if( rx > 0 ){
 				egl->setPrintPos( 5, 75 );
