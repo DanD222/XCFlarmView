@@ -123,12 +123,12 @@ extern "C" void app_main(void)
     Buzzer::play2( BUZZ_C, 500,audio_volume.get(), BUZZ_C, 1000, 0, 1 );
     DM.begin( egl );
 
+    if( DISPLAY_W == 240 )
+       	inch2dot4 = true;
+
     Version V;
     std::string ver = std::string("XCF") + (inch2dot4 ? "2.4" : "1.4") + " SW: ";
     ver += V.version();
-
-    if( DISPLAY_W == 240 )
-    	inch2dot4 = true;
 
     if( inch2dot4 )
     	egl->setFont(ucg_font_fub14_hn);
