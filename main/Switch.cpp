@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <esp_log.h>
 #include <SetupMenu.h>
+#include "esp_task_wdt.h"
 
 #define FNAME "Switch"
 
@@ -159,16 +160,18 @@ void Switch::tick() {
 }
 
 void Switch::switchTask(void* pvParameters) {
-    while (1) {
-        for (auto& sw : instances) {
-            sw->tick();
-        }
-        vTaskDelay(pdMS_TO_TICKS(TASK_PERIOD_MS));
-    }
+	esp_task_wdt_add(NULL);
+	while (1) {
+		for (auto& sw : instances) {
+			sw->tick();
+		}
+		esp_task_wdt_reset();
+		vTaskDelay(pdMS_TO_TICKS(TASK_PERIOD_MS));
+	}
 }
 
 void Switch::startTask() {
-    ESP_LOGI(FNAME, "Starting Switch Task");
-    if (pid == nullptr)
-        xTaskCreatePinnedToCore(&switchTask, "Switch", 6096, NULL, 9, &pid, 0);
+	ESP_LOGI(FNAME, "Starting Switch Task");
+	if (pid == nullptr)
+		xTaskCreatePinnedToCore(&switchTask, "Switch", 6096, NULL, 9, &pid, 0);
 }
