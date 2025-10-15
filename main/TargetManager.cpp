@@ -32,14 +32,12 @@ unsigned int TargetManager::team_id = 0;
 int TargetManager::info_timer = 0;
 float TargetManager::old_radius=0.0;
 xSemaphoreHandle _display=NULL;
-xSemaphoreHandle _pflaa_receive=NULL;
 Target* TargetManager::theInfoTarget=NULL;
 
 #define INFO_TIME (5*(1000/TASKPERIOD)/DISPLAYTICK)  // all ~10 sec
 
 void TargetManager::begin(){
 	_display=xSemaphoreCreateMutex();
-	_pflaa_receive=xSemaphoreCreateMutex();
 	xTaskCreatePinnedToCore(&taskTargetMgr, "taskTargetMgr", 4096, NULL, 10, &pid, 0);
 	attach( this );
 }
@@ -64,21 +62,22 @@ void TargetManager::receiveTarget( nmea_pflaa_s &pflaa ){
 	if( (pflaa.groundSpeed < 10) && (display_non_moving_target.get() == NON_MOVE_HIDE) ){
 			return;
 	}
-	xSemaphoreTake(_pflaa_receive,portMAX_DELAY );
+	DisplayLock lock(_display);
 	if( targets.find(pflaa.ID) == targets.end() ){
 		targets[ pflaa.ID ] = Target ( pflaa );
 	}
 	else
 		targets[ pflaa.ID ].update( pflaa );
 	targets[ pflaa.ID ].dumpInfo();
-	xSemaphoreGive(_pflaa_receive);
 }
 
 TargetManager::~TargetManager() {
 	// TODO Auto-generated destructor stub
+	vSemaphoreDelete(_display);
 }
 
 void TargetManager::drawN( int x, int y, bool erase, float north, float dist ){
+  if (!egl) return;
   if( SetupMenu::isActive() )
 		return;
 	// ESP_LOGI(FNAME,"drawAirplane x:%d y:%d small:%d", x, y, smallSize );
@@ -97,7 +96,7 @@ void TargetManager::drawAirplane(int x, int y, float north) {
     if (SetupMenu::isActive())
         return;
 
-    xSemaphoreTake(_display, portMAX_DELAY);
+    DisplayLock lock(_display);
 
     // --- Draw airplane body ---
     egl->setColor(COLOR_WHITE);
@@ -132,13 +131,13 @@ void TargetManager::drawAirplane(int x, int y, float north) {
 
     old_radius = new_radius;
 
-    xSemaphoreGive(_display);
 }
 
 
 void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_color_t color ){
 	// ESP_LOGI(FNAME,"printAlarm: %s, x:%d y:%d", alarm, x,y );
-	xSemaphoreTake(_display,portMAX_DELAY );
+	if (!egl) return;
+	DisplayLock lock(_display);
 	if( print ){
 		egl->setColor( color ); // G=0 R=255 B=0  RED Color
 	}else{
@@ -147,7 +146,6 @@ void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( alarm );
-	xSemaphoreGive(_display);
 }
 
 /*
@@ -159,7 +157,7 @@ void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_
 */
 
 void TargetManager::printAlarmLevel( const char*alarm, int x, int y, int level ){
-	xSemaphoreTake(_display,portMAX_DELAY );
+	DisplayLock lock(_display);
 	if( level == 0 ){
 		egl->setColor(COLOR_BLACK); // G=0 R=255 B=0  RED Color
 	}else if( level == 1 ){
@@ -172,7 +170,6 @@ void TargetManager::printAlarmLevel( const char*alarm, int x, int y, int level )
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( alarm );
-	xSemaphoreGive(_display);
 }
 
 void TargetManager::nextTarget(int timer){
@@ -193,23 +190,22 @@ void TargetManager::nextTarget(int timer){
 }
 
 void TargetManager::printVersions( int x, int y, const char *prefix, const char *ver, int erase ){
+	if (!egl) return;
+	DisplayLock lock(_display);
 	if( erase )
 		egl->setColor(COLOR_BLACK);
 	else{
 		egl->setColor(COLOR_WHITE);
 		info_timer = INFO_TIME;
 	}
-	xSemaphoreTake(_display, portMAX_DELAY);
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos( x, y );
 	egl->printf( "%s %s", prefix, ver );
-	xSemaphoreGive(_display);
 }
 
 void TargetManager::clearScreen(){
-	xSemaphoreTake(_display, portMAX_DELAY);
+	DisplayLock lock(_display);
 	egl->clearScreen();
-	xSemaphoreGive(_display);
 	// redrawNeeded = true;
 }
 
@@ -253,7 +249,7 @@ void TargetManager::printRX(){
 	if (Flarm::getRxFlag() ) {
 		int rx = Flarm::getRXNum();
 		if( rx_old != rx ){
-			xSemaphoreTake(_display,portMAX_DELAY );
+			DisplayLock lock(_display);
 			egl->setFont(ucg_font_ncenR14_hr);
 			if( rx_old > 0 ){
 				egl->setPrintPos( 5, 75 );
@@ -267,7 +263,6 @@ void TargetManager::printRX(){
 				egl->printf( "RX %d  ", rx );
 				rx_old = rx;
 			}
-			xSemaphoreGive(_display);
 		}
 		Flarm::resetRxFlag();
 	}
@@ -342,13 +337,12 @@ void TargetManager::handleFlarmFlags() {
     // --- Operation Progress ---
     if (Flarm::getProgressFlag()) {
         rewindInfoTimer();
-        xSemaphoreTake(_display, portMAX_DELAY);
+        DisplayLock lock(_display);
         egl->setColor(COLOR_WHITE);
         egl->setFont(ucg_font_ncenR14_hr);
         egl->setPrintPos(10, 60);
         egl->printf("%s: %d %%", Flarm::getOperationString(Flarm::getOperationKey()),
                     Flarm::getProgress());
-        xSemaphoreGive(_display);
         Flarm::resetProgressFlag();
     }
 
