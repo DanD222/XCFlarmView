@@ -19,8 +19,6 @@
                                //  5   * 50  = 250 mS -> 1000 / 250 = 4
 #define AGEOUT (30*((1000/((DISPLAYTICK*TASKPERIOD)))))  // 15 seconds
 
-
-
 class Target {
 public:
 	Target();
@@ -40,13 +38,6 @@ public:
 	void checkClose();
 	inline bool haveAlarm(){ return alarm; };
 	inline bool sameAlt( uint tolerance=150 ) { return( abs( pflaa.relVertical )< tolerance ); };
-<<<<<<< HEAD
-	inline void nearest( bool n ) { is_nearest=n; };
-	inline void best( bool n ) { is_best=n; };
-	inline bool isNearest() { return is_nearest; };
-	inline bool isBestClimber() { return is_best; };
-
-=======
 	inline void nearest( bool n ) { is_nearest=n;  updatePriority(); };
 	inline void best( bool n ) { is_best=n; };
 	inline bool isNearest() { return is_nearest; };
@@ -55,7 +46,6 @@ public:
 	        _isPriority = is_nearest || alarm;
 	}
 	inline bool isPriority() const { return _isPriority; }
->>>>>>> 1.4-inch
 private:
 	void drawClimb( int x, int y, int size, int climb );
 	void checkAlarm();
