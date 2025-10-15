@@ -25,7 +25,7 @@ public:
 	void release() {};
 	void up( int count ) {};
 	void down( int count ) {};
-	void doubleClick() {};
+	void longLongPress() {};
 	void longPress();
 	void escape() {};
 	int maxChar( const char *s, int pos, int len, bool binary=false );

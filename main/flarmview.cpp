@@ -28,29 +28,56 @@
 #include "Switch.h"
 #include "SetupMenu.h"
 #include "DataMonitor.h"
+#include "esp_task_wdt.h"
 
 AdaptUGC *egl = 0;
 OTA *ota = 0;
-bool inch2dot4=false;
 DataMonitor DM;
+TargetManager TM;
+#define WDT_TIMEOUT_S 10
+
+SetupMenu *menu=0;
+bool inch2dot4=false;
+#if( DISPLAY_W == 240 )
+Switch swUp;
+Switch swDown;
+#endif
+Switch swMode;
 float zoom=1.0;
 
-class SwitchObs: public SwitchObserver
-{
-public:
-	SwitchObs(const char* name) : SwitchObserver() {
-		ESP_LOGI(FNAME,"attach me %s", name );
-		Switch::attach(this);
-	};
-	~SwitchObs() {};
-	void doubleClick() {};
-	void press() {};
-	void longPress() {  ESP_LOGI(FNAME,"LONGPRESS");
 
-					 };
-};
-
-static SetupMenu *menu=0;
+void showText( int ypos, const char*text ){
+	if( text != 0 ){
+		int w=0;
+		char *buf = (char *)malloc(512);
+		memset(buf, 0, 512);
+		memcpy( buf, text, strlen(text));
+		char *p = strtok (buf, " ");
+		char *words[100];
+		while (p != NULL)
+		{
+			words[w++] = p;
+			p = strtok (NULL, " ");
+		}
+		// ESP_LOGI(FNAME,"show text number of words: %d", w);
+		int x=1;
+		int y=ypos;
+		egl->setFont(ucg_font_ncenR14_hr);
+		for( int p=0; p<w; p++ )
+		{
+			int len = egl->getStrWidth( words[p] );
+			// ESP_LOGI(FNAME,"showhelp pix len word #%d = %d, %s ", p, len, words[p]);
+			if( x+len > DISPLAY_W ) {   // does still fit on line
+				y+=25;
+				x=1;
+			}
+			egl->setPrintPos(x, y);
+			egl->print( words[p] );
+			x+=len+5;
+		}
+		free( buf );
+	}
+}
 
 extern "C" void app_main(void)
 {
@@ -83,41 +110,73 @@ extern "C" void app_main(void)
     printf("Minimum free heap size: %" PRIu32 " bytes\n", esp_get_minimum_free_heap_size());
 
     delay(100);
+	esp_task_wdt_init(WDT_TIMEOUT_S, true);
     //  serial1_speed.set( 1 );  // test for autoBaud
 
     egl = new AdaptUGC();
     DM.begin( egl );
     egl->begin();
-    // egl->setRedBlueTwist( true );
+    egl->setColor(0, COLOR_WHITE );
+    egl->setColor(1, COLOR_BLACK );
     egl->clearScreen();
     Buzzer::init(2700);
     Buzzer::play2( BUZZ_C, 500,audio_volume.get(), BUZZ_C, 1000, 0, 1 );
     DM.begin( egl );
 
+    if( DISPLAY_W == 240 )
+       	inch2dot4 = true;
+
     Version V;
-    std::string ver( "SW Ver.: " );
+    std::string ver = std::string("XCF") + (inch2dot4 ? "2.4" : "1.4") + " SW: ";
     ver += V.version();
 
-    egl->setFont(ucg_font_fub20_hn);
+    if( inch2dot4 )
+    	egl->setFont(ucg_font_fub14_hn);
+    else
+    	egl->setFont(ucg_font_fub20_hn);
+
     egl->setColor(COLOR_WHITE);
-    egl->setPrintPos( 50, 35 );
-    egl->print("XCFlarmView 2.0");
     if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
     	serial1_tx_enable.set(0);
     }
 
-    egl->setPrintPos( 10, 80 );
+    egl->setPrintPos( 10, 30 );
     egl->printf("%s",ver.c_str() );
 
-    egl->setPrintPos( 10, 115 );
-    egl->printf("Flarmnet: %s", FLARMNET_VERSION );
+	showText( 60,  "ID-Button Actions:" );
+	showText( 80,  "Short  (<0.3s): Next ID" );
+	showText( 100,  "Long   (>0.3s): Setup");
+    showText( 120,  "Hold   (>2s)  : Mark Team");
+
+    if( serial1_tx_enable.get() ){ // we don't need TX pin, so disable
+      	serial1_tx_enable.set(0);
+    }
 
     egl->setFont(ucg_font_ncenR14_hr);
-    egl->setPrintPos( 10, 150 );
-    egl->printf("Press Button for SW-Update");
-    Switch::begin(GPIO_NUM_0);
-    for(int i=0; i<20; i++){  // 40
-    	if( Switch::isClosed() ){
+
+    const char updatetxt[] = "Press Button for SW-Update";
+    int x,y;
+    if( inch2dot4 ) {x = 0; y = 270;}
+    else    		{x = 10;y = 165;}
+    egl->setPrintPos( x, y );
+    egl->printf(updatetxt);
+
+    if( inch2dot4 ){
+		#if( DISPLAY_W == 240 )
+    	swUp.begin(GPIO_NUM_0, B_UP );
+    	swDown.begin(GPIO_NUM_3, B_DOWN );
+		#endif
+        swMode.begin(GPIO_NUM_34, B_MODE );
+    }else{
+    	swMode.begin(GPIO_NUM_0, B_MODE );
+    }
+
+    for(int i=0; i<40; i++){
+#if( DISPLAY_W == 240 )
+    	if( swMode.isClosed() || swUp.isClosed() || swDown.isClosed() ){
+#else
+    	if( swMode.isClosed() ){
+#endif
     		egl->clearScreen();
     		ota = new OTA();
     		ota->doSoftwareUpdate();
@@ -131,18 +190,17 @@ extern "C" void app_main(void)
     egl->setColor(COLOR_WHITE);
    	egl->setPrintPos( 10, 35 );
 
-    // SwitchObs obs("main");
     menu = new SetupMenu();
     menu->begin();
     Switch::startTask();
 
-
-
     egl->clearScreen();
     Flarm::begin();
     Serial::begin();
-    TargetManager::begin();
-    Buzzer::play2( BUZZ_DH, 150,audio_volume.get(), BUZZ_DH, 1000, 0, 1 );
+    TM.begin();
+    Buzzer::play( BUZZ_DH, 250,audio_volume.get());
+
+    ESP_LOGI(FNAME,"Team ID: %X", team_id.get() );
 
     if( traffic_demo.get() ){
     	ESP_LOGI(FNAME,"Traffic Demo");
@@ -157,8 +215,12 @@ extern "C" void app_main(void)
     else
     	printf("Self Loop Test Failed");
 
+    ESP_LOGI(FNAME,"Team ID: %X", team_id.get() );
+    esp_task_wdt_add(NULL);
     while(1){
-    	delay(1000);
+    	ESP_LOGI(FNAME,"Free Heap: %d bytes", heap_caps_get_free_size(MALLOC_CAP_8BIT) );
+    	esp_task_wdt_reset();
+    	delay(5000);
     }
 
 }

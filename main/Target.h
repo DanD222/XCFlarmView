@@ -19,6 +19,8 @@
                                //  5   * 50  = 250 mS -> 1000 / 250 = 4
 #define AGEOUT (30*((1000/((DISPLAYTICK*TASKPERIOD)))))  // 15 seconds
 
+
+
 class Target {
 public:
 	Target();
@@ -34,19 +36,30 @@ public:
 	void dumpInfo();
 	void drawInfo(bool erase=false);
 	void redrawInfo();
-	void draw(bool erase);
+	void draw(bool erase, bool follow);
 	void checkClose();
 	inline bool haveAlarm(){ return alarm; };
 	inline bool sameAlt( uint tolerance=150 ) { return( abs( pflaa.relVertical )< tolerance ); };
+<<<<<<< HEAD
 	inline void nearest( bool n ) { is_nearest=n; };
 	inline void best( bool n ) { is_best=n; };
 	inline bool isNearest() { return is_nearest; };
 	inline bool isBestClimber() { return is_best; };
 
+=======
+	inline void nearest( bool n ) { is_nearest=n;  updatePriority(); };
+	inline void best( bool n ) { is_best=n; };
+	inline bool isNearest() { return is_nearest; };
+	inline bool isBestClimber() { return is_best; updatePriority();  };
+	inline void updatePriority() {        // mark as priority if this target is either nearest or has an alarm
+	        _isPriority = is_nearest || alarm;
+	}
+	inline bool isPriority() const { return _isPriority; }
+>>>>>>> 1.4-inch
 private:
 	void drawClimb( int x, int y, int size, int climb );
 	void checkAlarm();
-	void drawFlarmTarget( int x, int y, int bearing, int sideLength, bool erase=false, bool closest=false, ucg_color_t color={ COLOR_GREEN } );
+	void drawFlarmTarget( int x, int y, int bearing, int sideLength, bool erase=false, bool closest=false, ucg_color_t color={ COLOR_GREEN }, bool follow=false );
 	void drawDist( uint8_t r, uint8_t g, uint8_t b );
 	void drawVar( uint8_t r, uint8_t g, uint8_t b );
 	void drawAlt( uint8_t r, uint8_t g, uint8_t b );
@@ -68,13 +81,16 @@ private:
 	float rel_target_dir;
 	int old_track;
 	float dist, prox;
-	int x,y,old_ax, old_ay, old_x0, old_y0, old_x1, old_y1, old_x2, old_y2, old_closest, old_sidelen;
+	int x,y,old_ax, old_ay, old_x0, old_y0, old_x1, old_y1, old_x2, old_y2, old_closest, old_sidelen, old_cirsize, old_cirsizeteam;
 	char * reg;  // registration from flarmnet DB
 	char * comp; // competition ID
 
 	bool is_nearest;
+	bool _isPriority; // new: used for draw order priority
+	bool do_follow;
 	bool is_best;
 	bool alarm;
+	bool firstDraw;
 	int alarm_timer;
 	int old_climb;
 	int old_x;
@@ -83,10 +99,10 @@ private:
 	float tek_climb;
 	int last_groundspeed;
 
-	static char cur_dist[32];
-	static char cur_alt[32];
-	static char cur_id[32];
-	static char cur_var[32];
+	char cur_dist[32];
+	char cur_alt[32];
+	char cur_id[32];
+	char cur_var[32];
 
 	static int old_dist;
 	static unsigned int old_alt;
