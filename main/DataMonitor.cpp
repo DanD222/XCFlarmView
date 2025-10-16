@@ -211,15 +211,7 @@ void DataMonitor::start(SetupMenuSelect * p){
 
 void DataMonitor::stop(){
 	ESP_LOGI(FNAME,"stop");
-	channel = MON_OFF;
-	mon_started = false;
-	paused = true;
-	ucg->clearScreen();
-	delay(1000);
-	ucg->scrollLines( 0 );
-	setup->setSelect( MON_OFF );
-	SetupMenu::catchFocus( false );
-	enable_restart = false;
-	// setup->_parent->press();
+	delay(100);
+	esp_restart();
 }
 

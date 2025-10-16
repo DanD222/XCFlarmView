@@ -112,6 +112,8 @@ void SetupMenu::setup( )
 
 void SetupMenu::catchFocus( bool activate ){
 	focus = activate;
+	if( activate == false )
+		_menu_active = false;
 }
 
 void SetupMenu::display( int mode ){
