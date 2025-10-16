@@ -211,6 +211,7 @@ void Serial::serialHandler(void *pvParameters)
 		        ESP_LOGW(FNAME, "UART RX buffer nearly full (%d bytes)", rxBytes);
 		        break;
 		    }
+		    vTaskDelay(pdMS_TO_TICKS(5));
 		}
 
 		// Null-terminate for safety (for text/NMEA parsing)
@@ -231,7 +232,7 @@ void Serial::serialHandler(void *pvParameters)
 		}
 		if( start_holddown > 0 )
 			start_holddown--;
-		delay( 5 );
+		vTaskDelay(pdMS_TO_TICKS(5));
 	} // end while( true )
 }
 
@@ -387,5 +388,5 @@ void Serial::begin(){
 
 void Serial::taskStart(){
 	ESP_LOGI(FNAME,"Serial::taskStart()" );
-	xTaskCreatePinnedToCore(&serialHandler, "serialHandler1", 6192, NULL, 13, &pid, 0);
+	xTaskCreatePinnedToCore(&serialHandler, "serialHandler1", 6192, NULL, 21, &pid, 0);
 }

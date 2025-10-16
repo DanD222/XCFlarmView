@@ -9,7 +9,7 @@
 
 #if( DISPLAY_W == 240 )
 #define BINLEN 95
-#define SCOLL_LINES 20
+#define SCROLL_LINES 20
 #define INFO_START 40
 #else
 #define BINLEN 130
@@ -38,7 +38,7 @@ int DataMonitor::maxChar( const char *str, int pos, int len, bool binary ){
 	int N=0;
 	int i=0;
 	char s[4] = { 0 };
-	while( N <= DISPLAY_W ){
+	while( N <= DISPLAY_W && (i + pos) < len ){
 		if( binary ){
 			sprintf( s, "%02x ", str[i+pos] );
 		}
@@ -139,7 +139,7 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 			}
 			else{
 				hpos += sprintf( txt, "%c ", dirsym );
-				hpos += sprintf( txt+hpos, "%s", hunk );
+				hpos += snprintf(txt + hpos, sizeof(txt) - hpos, "%s", hunk);
 				txt[hpos] = 0;
 				ucg->print( txt );
 				// ESP_LOGI(FNAME,"DM ascii ch:%d dir:%d data:%s", ch, dir, txt );
@@ -161,30 +161,19 @@ void DataMonitor::scroll(int scroll){
 }
 
 void DataMonitor::up( int count ){
-	press(); // 1.4 inch display minics up when in Setup by ID button
-}
-
-void DataMonitor::press(){
-	ESP_LOGI(FNAME,"press paused: %d", paused );
-	if( !swMode.isClosed() ){ // only process press here
+	ESP_LOGI(FNAME,"up" );
 	if( paused )
 		paused = false;
 	else
 		paused = true;
-	}
-	delay( 100 );
+}
+
+void DataMonitor::press(){
+	ESP_LOGI(FNAME,"press" );
 }
 
 void DataMonitor::longPress(){
 	ESP_LOGI(FNAME,"longPress" );
-	return;
-	if( !mon_started ){
-		ESP_LOGI(FNAME,"longPress, but not started, return" );
-		return;
-	}else{
-		stop();
-		delay(100);
-	}
 }
 
 void DataMonitor::start(SetupMenuSelect * p){

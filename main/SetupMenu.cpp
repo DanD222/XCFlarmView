@@ -112,8 +112,6 @@ void SetupMenu::setup( )
 
 void SetupMenu::catchFocus( bool activate ){
 	focus = activate;
-	if( activate == false )
-		_menu_active = false;
 }
 
 void SetupMenu::display( int mode ){
@@ -163,7 +161,7 @@ void SetupMenu::up(int count){
 #else
 void SetupMenu::down(int count){
 #endif
-	if( selected != this ){
+	if( selected != this || focus ){
 		return;
 	}
 	if( !_menu_active ){
@@ -192,7 +190,7 @@ void SetupMenu::down(int count){
 #else
 void SetupMenu::up(int count){
 #endif
-	if( selected != this)
+	if( selected != this || focus )
 		return;
 	if( !_menu_active ){
 		if( zoom > 0.5 )
