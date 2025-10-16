@@ -245,16 +245,16 @@ void Flarm::parsePFLAA( const char *pflaa ){
 		PFLAA.track = std::stoi(token);
 	std::getline(ss, token, ',');
 	if( !token.empty() )
-		PFLAA.turnRate = std::stoi(token);
+		PFLAA.turnRate = std::stof(token);
 	std::getline(ss, token, ',');
 	if( !token.empty() )
-		PFLAA.groundSpeed = std::stoi(token);
+		PFLAA.groundSpeed = std::stof(token);
 	std::getline(ss, token, ',');
 	if( !token.empty() )
 		PFLAA.climbRate = std::stof(token);
 	std::getline(ss, token, ',');
 	if( !token.empty() )
-		sscanf(token.c_str(), "%s", PFLAA.acftType);
+		sscanf(token.c_str(), "%2s", PFLAA.acftType);
 
 	_tick=0;
 	connected_timeout = FLARM_TIMEOUT;
@@ -286,20 +286,17 @@ int Flarm::getNMEACheckSum(const char *nmea) {
 	return cs;
 }
 
-void Flarm::flarmSim(){
-	// ESP_LOGI(FNAME,"flarmSim sim-tick: %d", sim_tick);
-	if( sim_tick < END_SIM  ){
-		if( sim_tick >= 0 ){
-			// int cs = calcNMEACheckSum( (char *)pflaa2[sim_tick] );
-			char str[80];
-			snprintf( str, sizeof(str), "%s", pflaa2[sim_tick] );
-			parseNMEA( str, strlen(str) );
-			// ESP_LOGI(FNAME,"Serial FLARM SIM: %s",  str );
-		}
-		sim_tick++;
-	}else{
-		flarm_sim=false; // end sim mode
-	}
+void Flarm::flarmSim() {
+    // ESP_LOGI(FNAME, "flarmSim sim-tick: %d", sim_tick);
+    if (sim_tick >= 0 && sim_tick < END_SIM) {
+        char str[80];
+        snprintf(str, sizeof(str), "%s", pflaa2[sim_tick]);
+        parseNMEA(str, strlen(str));
+        sim_tick++;
+    } else {
+        flarm_sim = false;   // end sim mode
+        sim_tick = -1;       // reset so it can restart cleanly
+    }
 }
 
 void Flarm::pflau_timeout(){
@@ -616,7 +613,7 @@ void Flarm::parsePFLAV( const char *pflav ) {
 		return;
 	}
 	char query;
-	sscanf( pflav, "$PFLAV,%c,%[^,],%[^,],%[^,]",&query,HwVersion,SwVersion,ObstVersion );
+	sscanf( pflav, "$PFLAV,%c,%15[^,],%15[^,],%31[^,]", &query, HwVersion, SwVersion, ObstVersion );
 
 	if( query == 'A' ){
 		ESP_LOGI(FNAME,"PFLAV %c %s %s %s", query, HwVersion,SwVersion,ObstVersion );
