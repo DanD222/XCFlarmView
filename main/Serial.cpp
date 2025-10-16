@@ -387,5 +387,5 @@ void Serial::begin(){
 
 void Serial::taskStart(){
 	ESP_LOGI(FNAME,"Serial::taskStart()" );
-	xTaskCreatePinnedToCore(&serialHandler, "serialHandler1", 6192, NULL, 22, &pid, 0);
+	xTaskCreatePinnedToCore(&serialHandler, "serialHandler1", 6192, NULL, 13, &pid, 0);
 }

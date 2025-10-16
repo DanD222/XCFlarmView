@@ -37,6 +37,7 @@ private:
 	void header( int ch, bool binary=false );
 	void scroll(int scroll);
 	bool mon_started;
+	int longPressCount;
 	AdaptUGC *ucg;
 	int scrollpos;
 	bool paused;

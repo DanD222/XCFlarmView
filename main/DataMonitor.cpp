@@ -4,10 +4,21 @@
 #include "Flarm.h"
 #include "SetupMenu.h"
 
-#define SCROLL_TOP      20
+
 #define SCROLL_BOTTOM  DISPLAY_H
 
-xSemaphoreHandle DataMonitor::mutex = 0;
+#if( DISPLAY_W == 240 )
+#define BINLEN 95
+#define SCOLL_LINES 20
+#define INFO_START 40
+#else
+#define BINLEN 130
+#define SCROLL_LINES 15
+#define INFO_START  30
+#endif
+
+// xSemaphoreHandle DataMonitor::mutex = 0;
+extern xSemaphoreHandle _display;
 extern bool enable_restart;
 
 DataMonitor::DataMonitor(){
@@ -17,7 +28,7 @@ DataMonitor::DataMonitor(){
 	paused = true;
 	setup = 0;
 	channel = MON_OFF;
-	mutex = xSemaphoreCreateMutex();
+	// mutex = xSemaphoreCreateMutex();
 	first=true;
 	rx_total = 0;
 	tx_total = 0;
@@ -55,26 +66,26 @@ void DataMonitor::header( int ch, bool binary ){
 		b = "B-";
 	else
 		b = "";
-	ucg->setPrintPos( 20, SCROLL_TOP );
+	ucg->setPrintPos( 20, INFO_START );
 	ucg->printf( "%s%s: RX:%d TX:%d bytes   ", b, what, rx_total, tx_total );
 }
 
+
 void DataMonitor::monitorString( int ch, e_dir_t dir, const char *str, int len ){
-	if( xSemaphoreTake(mutex,portMAX_DELAY ) ){
-		if( !mon_started || paused || (ch != channel) ){
-			// ESP_LOGI(FNAME,"not active, return started:%d paused:%d", mon_started, paused );
-			xSemaphoreGive(mutex);
-			return;
-		}
-		bool binary = false;
-		printString( ch, dir, str, binary, len );
-		xSemaphoreGive(mutex);
+	if( !mon_started || paused || (ch != channel) ){
+		// ESP_LOGI(FNAME,"not active, return started:%d paused:%d", mon_started, paused );
+		return;
 	}
+	DisplayLock lock(_display);
+	bool binary = false;
+	printString( ch, dir, str, binary, len );
 }
 
+
+
 void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary, int len ){
-	ESP_LOGI(FNAME,"DM ch:%d dir:%d len:%d data:%s", ch, dir, len, str );
-	const int scroll_lines = 20;
+	// ESP_LOGI(FNAME,"DM ch:%d dir:%d len:%d data:%s", ch, dir, len, str );
+	const int scroll_lines = SCROLL_LINES;
 	char dirsym = 0;
 	if( dir == DIR_RX ){
 		dirsym = '>';
@@ -87,10 +98,18 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 	if( first ){
 		first = false;
 		ucg->setColor( COLOR_BLACK );
-		ucg->drawBox( 0,SCROLL_TOP,DISPLAY_W,DISPLAY_H );
+		ucg->drawBox( 0, INFO_START,DISPLAY_W,DISPLAY_H );
 	}
 	ucg->setColor( COLOR_WHITE );
     header( ch, binary );
+    if( swMode.isClosed() ){
+    	longPressCount++;
+    	ESP_LOGI(FNAME,"Hold count: %d", longPressCount );
+    	if( longPressCount > 3 )
+    		stop();
+    }else{
+    	longPressCount = 0;
+    }
 	//if( !binary )
 	// 	len = len-1;  // ignore the \n in ASCII mode
 	int hunklen = 0;
@@ -99,11 +118,11 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 		// ESP_LOGI(FNAME,"DM 1 len: %d pos: %d", len, pos );
 		hunklen = maxChar( str, pos, len, binary );
 		if( hunklen ){
-			char hunk[64] = { 0 };
+			char hunk[128] = { 0 };
 			memcpy( (void*)hunk, (void*)(str+pos), hunklen );
 			// ESP_LOGI(FNAME,"DM 2 hunklen: %d pos: %d  h:%s", hunklen, pos, hunk );
 			ucg->setColor( COLOR_BLACK );
-			ucg->drawBox( 0, scrollpos, DISPLAY_W,scroll_lines );
+			ucg->drawBox( 0, scrollpos-3, DISPLAY_W,scroll_lines+3 );
 			ucg->setColor( COLOR_WHITE );
 			ucg->setPrintPos( 0, scrollpos+scroll_lines );
 			ucg->setFont(ucg_font_fub11_tr, true );
@@ -111,7 +130,7 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 			int hpos = 0;
 			if( binary ){   // format data as readable text
 				hpos += sprintf( txt, "%c ", dirsym );
-				for( int i=0; i<hunklen && hpos<95 ; i++ ){
+				for( int i=0; i<hunklen && hpos<BINLEN ; i++ ){
 					hpos += sprintf( txt+hpos, "%02x ", hunk[i] );
 				}
 				txt[hpos] = 0; // zero terminate string
@@ -135,8 +154,10 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 void DataMonitor::scroll(int scroll){
 	scrollpos+=scroll;
 	if( scrollpos >= SCROLL_BOTTOM )
-		scrollpos = scroll;
+		scrollpos = INFO_START;
+#if( DISPLAY_W == 240 )   // small display can't scroll vertically (as built in)
 	ucg->scrollLines( scrollpos );  // set frame origin
+#endif
 }
 
 void DataMonitor::up( int count ){
@@ -160,9 +181,10 @@ void DataMonitor::longPress(){
 	if( !mon_started ){
 		ESP_LOGI(FNAME,"longPress, but not started, return" );
 		return;
+	}else{
+		stop();
+		delay(100);
 	}
-	stop();
-	delay(100);
 }
 
 void DataMonitor::start(SetupMenuSelect * p){
@@ -179,12 +201,11 @@ void DataMonitor::start(SetupMenuSelect * p){
 	ucg->setColor( COLOR_WHITE );
 	ucg->setFont(ucg_font_fub11_tr, true );
 	header( channel );
-	if( display_orientation.get() == DISPLAY_TOPDOWN )
-		ucg->scrollSetMargins( 0, SCROLL_TOP );
-	else
-		ucg->scrollSetMargins( SCROLL_TOP, 0 );
+#if( DISPLAY_W == 240 )
+	ucg->scrollSetMargins( INFO_START, 0 );
+#endif
 	mon_started = true;
-	paused = true; // will resume with press()
+	paused = false;
 	ESP_LOGI(FNAME,"started");
 }
 
@@ -192,13 +213,13 @@ void DataMonitor::stop(){
 	ESP_LOGI(FNAME,"stop");
 	channel = MON_OFF;
 	mon_started = false;
-	paused = false;
+	paused = true;
+	ucg->clearScreen();
 	delay(1000);
 	ucg->scrollLines( 0 );
 	setup->setSelect( MON_OFF );
 	SetupMenu::catchFocus( false );
 	enable_restart = false;
-	setup->_parent->press();
-
+	// setup->_parent->press();
 }
 
