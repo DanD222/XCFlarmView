@@ -23,7 +23,7 @@ public:
 	void stop();
 	void press();
 	void release() {};
-	void up( int count ) {};
+	void up( int count );
 	void down( int count ) {};
 	void longLongPress() {};
 	void longPress();

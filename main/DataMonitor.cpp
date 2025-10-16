@@ -5,7 +5,7 @@
 #include "SetupMenu.h"
 
 #define SCROLL_TOP      20
-#define SCROLL_BOTTOM  320
+#define SCROLL_BOTTOM  DISPLAY_H
 
 xSemaphoreHandle DataMonitor::mutex = 0;
 extern bool enable_restart;
@@ -27,7 +27,7 @@ int DataMonitor::maxChar( const char *str, int pos, int len, bool binary ){
 	int N=0;
 	int i=0;
 	char s[4] = { 0 };
-	while( N <= 240 ){
+	while( N <= DISPLAY_W ){
 		if( binary ){
 			sprintf( s, "%02x ", str[i+pos] );
 		}
@@ -35,7 +35,7 @@ int DataMonitor::maxChar( const char *str, int pos, int len, bool binary ){
 			s[0] = str[i+pos];
 		}
 		N += ucg->getStrWidth( s );
-		if( N<220 && (i+pos)<len ){
+		if( N<DISPLAY_W-20 && (i+pos)<len ){
 			i++;
 		}else{
 			break;
@@ -73,7 +73,7 @@ void DataMonitor::monitorString( int ch, e_dir_t dir, const char *str, int len )
 }
 
 void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary, int len ){
-	// ESP_LOGI(FNAME,"DM ch:%d dir:%d len:%d data:%s", ch, dir, len, str );
+	ESP_LOGI(FNAME,"DM ch:%d dir:%d len:%d data:%s", ch, dir, len, str );
 	const int scroll_lines = 20;
 	char dirsym = 0;
 	if( dir == DIR_RX ){
@@ -87,7 +87,7 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 	if( first ){
 		first = false;
 		ucg->setColor( COLOR_BLACK );
-		ucg->drawBox( 0,SCROLL_TOP,240,320 );
+		ucg->drawBox( 0,SCROLL_TOP,DISPLAY_W,DISPLAY_H );
 	}
 	ucg->setColor( COLOR_WHITE );
     header( ch, binary );
@@ -103,11 +103,11 @@ void DataMonitor::printString( int ch, e_dir_t dir, const char *str, bool binary
 			memcpy( (void*)hunk, (void*)(str+pos), hunklen );
 			// ESP_LOGI(FNAME,"DM 2 hunklen: %d pos: %d  h:%s", hunklen, pos, hunk );
 			ucg->setColor( COLOR_BLACK );
-			ucg->drawBox( 0, scrollpos, 240,scroll_lines );
+			ucg->drawBox( 0, scrollpos, DISPLAY_W,scroll_lines );
 			ucg->setColor( COLOR_WHITE );
 			ucg->setPrintPos( 0, scrollpos+scroll_lines );
 			ucg->setFont(ucg_font_fub11_tr, true );
-			char txt[256];
+			char txt[512];
 			int hpos = 0;
 			if( binary ){   // format data as readable text
 				hpos += sprintf( txt, "%c ", dirsym );
@@ -139,6 +139,10 @@ void DataMonitor::scroll(int scroll){
 	ucg->scrollLines( scrollpos );  // set frame origin
 }
 
+void DataMonitor::up( int count ){
+	press(); // 1.4 inch display minics up when in Setup by ID button
+}
+
 void DataMonitor::press(){
 	ESP_LOGI(FNAME,"press paused: %d", paused );
 	if( !swMode.isClosed() ){ // only process press here
@@ -152,6 +156,7 @@ void DataMonitor::press(){
 
 void DataMonitor::longPress(){
 	ESP_LOGI(FNAME,"longPress" );
+	return;
 	if( !mon_started ){
 		ESP_LOGI(FNAME,"longPress, but not started, return" );
 		return;
@@ -170,7 +175,7 @@ void DataMonitor::start(SetupMenuSelect * p){
 	channel = p->getSelect();
 	SetupMenu::catchFocus( true );
 	ucg->setColor( COLOR_BLACK );
-	ucg->drawBox( 0,0,240,320 );
+	ucg->drawBox( 0,0,DISPLAY_W,DISPLAY_H );
 	ucg->setColor( COLOR_WHITE );
 	ucg->setFont(ucg_font_fub11_tr, true );
 	header( channel );
