@@ -18,7 +18,7 @@ class TargetManager: public SwitchObserver {
 public:
 	TargetManager();
 	~TargetManager();
-	static void receiveTarget( nmea_pflaa_s &target );
+	static void receiveTarget( const nmea_pflaa_s &target );
 	static void tick();
 	static void drawAirplane( int x, int y, float north=0.0 );
 	void begin();

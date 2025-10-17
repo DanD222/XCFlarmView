@@ -57,18 +57,20 @@ TargetManager::TargetManager() {
 	// TODO Auto-generated constructor stub
 }
 
-void TargetManager::receiveTarget( nmea_pflaa_s &pflaa ){
-	// ESP_LOGI(FNAME,"ID %06X (dec) %d ", pflaa.ID, pflaa.ID );
-	if( (pflaa.groundSpeed < 10) && (display_non_moving_target.get() == NON_MOVE_HIDE) ){
-			return;
-	}
-	DisplayLock lock(_display);
-	if( targets.find(pflaa.ID) == targets.end() ){
-		targets[ pflaa.ID ] = Target ( pflaa );
-	}
-	else
-		targets[ pflaa.ID ].update( pflaa );
-	targets[ pflaa.ID ].dumpInfo();
+void TargetManager::receiveTarget(const nmea_pflaa_s &pflaa) {
+    if ((pflaa.groundSpeed < 10) && (display_non_moving_target.get() == NON_MOVE_HIDE))
+        return;
+
+    DisplayLock lock(_display);
+
+    auto it = targets.find(pflaa.ID);
+    if (it == targets.end()) {
+        it = targets.emplace(pflaa.ID, Target(pflaa)).first;
+    } else {
+        it->second.update(pflaa);
+    }
+
+    it->second.dumpInfo();
 }
 
 TargetManager::~TargetManager() {
@@ -100,38 +102,40 @@ void TargetManager::drawAirplane(int x, int y, float north) {
 
     // --- Draw airplane body ---
     egl->setColor(COLOR_WHITE);
-    // Wings
     egl->drawTetragon(x - 15, y - 1, x - 15, y + 1, x + 15, y + 1, x + 15, y - 1);
-    // Fuselage
     egl->drawTetragon(x - 1, y + 10, x - 1, y - 6, x + 1, y - 6, x + 1, y + 10);
-    // Elevator
     egl->drawTetragon(x - 4, y + 10, x - 4, y + 9, x + 4, y + 9, x + 4, y + 10);
 
     // --- Compute new radius ---
-    float new_radius = 25;
+    float new_radius;
     if (inch2dot4) {
-        float logs = log_scale.get() ? log(3) : 1;  // log(2 + 1) = log(3)
-        new_radius = zoom * logs * SCALE;
+        float factor = log_scale.get() ? logf(zoom + 1.0f) : zoom;
+        new_radius = factor * SCALE;
+    } else {
+        new_radius = 25.0f;
     }
 
-    // --- Clear previous drawings if needed ---
-    if (oldN != -1.0 && (oldN != north || old_radius != new_radius)) {
-        drawN(x, y, true, oldN, old_radius);
+    // --- Redraw orientation and circle if changed ---
+    constexpr float EPS_N = 0.5f;
+    float delta = fabsf(fmodf(north - oldN + 540.0f, 360.0f) - 180.0f);
+    bool needRedraw = (oldN == -1.0f) || delta > EPS_N || fabsf(old_radius - new_radius) > 0.5f;
+
+    if (needRedraw) {
+        if (oldN != -1.0f)
+            drawN(x, y, true, oldN, old_radius);
+
+        if (old_radius > 0.0f)
+            egl->drawCircle(x, y, old_radius);
+
+        egl->setColor(COLOR_GREEN);
+        drawN(x, y, false, north, new_radius);
+        egl->drawCircle(x, y, new_radius);
+
+        oldN = north;
+        old_radius = new_radius;
     }
-
-    if (old_radius != 0.0 && old_radius != new_radius) {
-        egl->setColor(COLOR_BLACK);
-        egl->drawCircle(x, y, old_radius);
-    }
-
-    // --- Draw new orientation and circle ---
-    egl->setColor(COLOR_GREEN);
-    drawN(x, y, false, north, new_radius);
-    egl->drawCircle(x, y, new_radius);
-
-    old_radius = new_radius;
-
 }
+
 
 
 void TargetManager::printAlarm( const char*alarm, int x, int y, bool print, ucg_color_t color ){
