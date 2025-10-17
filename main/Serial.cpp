@@ -304,11 +304,10 @@ void Serial::huntBaudrate(){
 		}
 		uart_set_baudrate(uart_num, baud[baudrate]);
 		if( !SetupMenu::isActive() ){
-			xSemaphoreTake(_display, portMAX_DELAY);
+			DisplayLock lock(_display);
 			egl->setColor(COLOR_WHITE);
 			egl->setPrintPos( 10, 40 );
 			egl->printf("Autobaud: %d    ", baud[baudrate] );
-			xSemaphoreGive(_display);
 		}
 		ESP_LOGI(FNAME,"Serial Interface ttyS1 next baudrate: %d", baud[baudrate] );
 	}

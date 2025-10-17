@@ -256,9 +256,9 @@ int rx_old = -1;
 void TargetManager::printRX(){
 	// --- RX Flag ---
 	if (Flarm::getRxFlag() ) {
+		DisplayLock lock(_display);
 		int rx = Flarm::getRXNum();
 		if( rx_old != rx ){
-			DisplayLock lock(_display);
 			egl->setFont(ucg_font_ncenR14_hr);
 			if( rx_old > 0 ){
 				egl->setPrintPos( 5, 75 );
