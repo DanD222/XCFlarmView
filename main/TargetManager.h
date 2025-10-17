@@ -9,6 +9,7 @@
 #include <map>
 #include "Target.h"
 #include "Switch.h"
+#include <mutex>
 
 #ifndef MAIN_TARGETMANAGER_H_
 #define MAIN_TARGETMANAGER_H_
@@ -39,6 +40,7 @@ public:
 private:
 	static TargetManager* instance;
 	static std::map< unsigned int, Target> targets;
+	static std::mutex targets_mutex;
 	static std::map< unsigned int, Target>::iterator id_iter;
 	static float oldN;
 	static void drawN( int x, int y, bool erase, float north, float azoom );

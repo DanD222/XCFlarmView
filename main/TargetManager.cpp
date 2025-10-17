@@ -16,7 +16,9 @@
 #include "flarmview.h"
 #include "esp_task_wdt.h"
 
+
 std::map< unsigned int, Target> TargetManager::targets;
+std::mutex TargetManager::targets_mutex;
 std::map< unsigned int, Target>::iterator TargetManager::id_iter = targets.begin();
 extern AdaptUGC *egl;
 float TargetManager::oldN   = -1.0;
@@ -57,12 +59,13 @@ TargetManager::TargetManager() {
 	// TODO Auto-generated constructor stub
 }
 
+
+
+
 void TargetManager::receiveTarget(const nmea_pflaa_s &pflaa) {
     if ((pflaa.groundSpeed < 10) && (display_non_moving_target.get() == NON_MOVE_HIDE))
         return;
-
-    DisplayLock lock(_display);
-
+    std::lock_guard<std::mutex> guard(targets_mutex);
     auto it = targets.find(pflaa.ID);
     if (it == targets.end()) {
         it = targets.emplace(pflaa.ID, Target(pflaa)).first;
@@ -178,6 +181,7 @@ void TargetManager::printAlarmLevel( const char*alarm, int x, int y, int level )
 
 void TargetManager::nextTarget(int timer){
 	// ESP_LOGI(FNAME,"nextTarget size:%d", targets.size() );
+	std::lock_guard<std::mutex> guard(targets_mutex);
 	if( targets.size() ){
 		if( ++id_iter == targets.end() )
 			id_iter = targets.begin();
@@ -232,6 +236,7 @@ void TargetManager::press() {
 };
 
 void TargetManager::longLongPress() {
+	std::lock_guard<std::mutex> guard(targets_mutex);
 	if( id_iter != targets.end() ){
 		team_id = id_iter->first;
 		ESP_LOGI(FNAME,"long long press: target ID locked: %X", team_id );
@@ -359,6 +364,7 @@ void TargetManager::handleFlarmFlags() {
 
 }
 
+
 void TargetManager::tick() {
     _tick++;
     float min_dist   = 10000.0f;
@@ -391,36 +397,39 @@ void TargetManager::tick() {
     }
 
     // --- Pass 1: Determine nearest and max climb ---
-    for (auto &kv : targets) {
-        Target &tgt = kv.second;
-        tgt.ageTarget();
-        tgt.nearest(false);
-        tgt.best(false);
+    {
+    	std::lock_guard<std::mutex> guard(targets_mutex);
+    	for (auto &kv : targets) {
+    		Target &tgt = kv.second;
+    		tgt.ageTarget();
+    		tgt.nearest(false);
+    		tgt.best(false);
 
-        if (tgt.getAge() < AGEOUT) {
-            if (tgt.haveAlarm()) id_timer = 0;
+    		if (tgt.getAge() < AGEOUT) {
+    			if (tgt.haveAlarm()) id_timer = 0;
 
-            if (tgt.getClimb() > max_climb) {
-                max_climb = tgt.getClimb();
-                maxcl_id = kv.first;
-            }
+    			if (tgt.getClimb() > max_climb) {
+    				max_climb = tgt.getClimb();
+    				maxcl_id = kv.first;
+    			}
 
-            if (!id_timer) {
-                if (tgt.getProximity() < min_dist) {
-                    min_dist = tgt.getDist();
-                    min_id = kv.first;
-                    id_iter = targets.end(); // deselect again
-                }
-            } else if (id_iter != targets.end() && kv.first == id_iter->first) {
-                tgt.nearest(true);
-            }
-        }
+    			if (!id_timer) {
+    				if (tgt.getProximity() < min_dist) {
+    					min_dist = tgt.getDist();
+    					min_id = kv.first;
+    					id_iter = targets.end(); // deselect again
+    				}
+    			} else if (id_iter != targets.end() && kv.first == id_iter->first) {
+    				tgt.nearest(true);
+    			}
+    		}
+    	}
     }
 
     // --- Pass 2: Draw all visible targets ---
     if (flarm_ok) {
         std::vector<std::pair<uint32_t, Target*>> visible;
-
+        std::lock_guard<std::mutex> guard(targets_mutex);
         // Collect visible targets
         for (auto it = targets.begin(); it != targets.end();) {
             Target &tgt = it->second;
@@ -436,10 +445,14 @@ void TargetManager::tick() {
                 ++it;
             } else {
                 // --- Remove invisible / aged-out target ---
-                if (id_iter != targets.end() && it->first == id_iter->first) id_iter++;
-                // tgt.drawInfo(true); // only erase info here
-                tgt.draw(true, it->first == team_id);
-                it = targets.erase(it);
+                // Do NOT erase the info target here
+                if (theInfoTarget && it->first == theInfoTarget->getID()) {
+                    ++it; // skip erasing, keep info on screen
+                } else {
+                    if (id_iter != targets.end() && it->first == id_iter->first) id_iter++;
+                    tgt.draw(true, it->first == team_id);
+                    it = targets.erase(it);
+                }
             }
         }
 

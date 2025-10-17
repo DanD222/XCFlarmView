@@ -277,14 +277,13 @@ int Flarm::calcNMEACheckSum(const char *nmea) {
 }
 
 int Flarm::getNMEACheckSum(const char *nmea) {
-	int i, cs, c;
-	for (i = 0; i < strlen(nmea); i++) {
-		c = (unsigned char)nmea[i];
-		if (c == '*') break;
-	}
-	sscanf( &nmea[i],"*%02x", &cs );
-	return cs;
+    const char *p = strchr(nmea, '*');
+    if (!p) return -1;
+    int cs = 0;
+    if (sscanf(p, "*%02x", &cs) != 1) return -1;
+    return cs;
 }
+
 
 void Flarm::flarmSim() {
     // ESP_LOGI(FNAME, "flarmSim sim-tick: %d", sim_tick);
