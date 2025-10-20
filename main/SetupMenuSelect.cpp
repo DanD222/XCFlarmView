@@ -128,6 +128,7 @@ void SetupMenuSelect::display( int mode ){
 		selected = _parent;
 	}else
 	{
+		DisplayLock lock(_display);
 		egl->setPrintPos(1,25);
 		ESP_LOGI(FNAME,"Title: %s ", _title );
 		egl->printf("<< %s",_title);
@@ -173,10 +174,12 @@ void SetupMenuSelect::down(int count){
 				(_select)--;
 			count--;
 		}
+		DisplayLock lock(_display);
 		egl->setPrintPos( 1, 50 );
 		egl->setFont(ucg_font_ncenR14_hr, true );
 		egl->printf("%s                  ",_values[_select] );
 	}else {
+		DisplayLock lock(_display);
 		egl->setColor(COLOR_BLACK);
 		egl->drawFrame( 1,(_select+1)*25+3,318,25 );  // blank old frame
 		egl->setColor(COLOR_WHITE);
@@ -201,10 +204,12 @@ void SetupMenuSelect::up(int count){
 				(_select)++;
 			count--;
 		}
+		DisplayLock lock(_display);
 		egl->setPrintPos( 1, 50 );
 		egl->setFont(ucg_font_ncenR14_hr, true );
 		egl->printf("%s                   ", _values[_select] );
 	}else {
+		DisplayLock lock(_display);
 		egl->setColor(COLOR_BLACK);
 		egl->drawFrame( 1,(_select+1)*25+3,318,25 );  // blank old frame
 		egl->setColor(COLOR_WHITE);

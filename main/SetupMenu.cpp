@@ -39,6 +39,7 @@ int SetupMenu::hpos = 240;
 
 int do_display_test(SetupMenuSelect * p){
 	if( display_test.get() ){
+		DisplayLock lock(_display);
 		egl->setColor( COLOR_WHITE );
 		egl->drawBox( 0, 0, DISPLAY_W, DISPLAY_H );
 		while( swMode.isOpen() ){
@@ -130,6 +131,7 @@ void SetupMenu::display( int mode ){
 	clear();
 	int y=25;
 	// ESP_LOGI(FNAME,"Title: %s y=%d child size:%d", selected->_title,y, _childs.size()  );
+	DisplayLock lock(_display);
 	egl->setFont(ucg_font_ncenR14_hr);
 	egl->setPrintPos(1,y);
 	egl->setFontPosBottom();
@@ -173,6 +175,7 @@ void SetupMenu::down(int count){
 	ESP_LOGI(FNAME,"down %d %d %d", highlight, _childs.size(), focus );
 	if( focus )
 		return;
+	DisplayLock lock(_display);
 	egl->setColor(COLOR_BLACK);
 	egl->drawFrame( 1,(highlight+1)*25+3,DISPLAY_W-2,25 );
 	egl->setColor(COLOR_WHITE);
@@ -201,6 +204,7 @@ void SetupMenu::up(int count){
 	ESP_LOGI(FNAME,"SetupMenu::up %d %d %d", highlight, _childs.size(), focus );
 	if( focus )
 		return;
+	DisplayLock lock(_display);
 	egl->setColor(COLOR_BLACK);
 	egl->drawFrame( 1,(highlight+1)*25+3,DISPLAY_W-2,25 );
 	egl->setColor(COLOR_WHITE);

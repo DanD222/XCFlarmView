@@ -155,6 +155,7 @@ void AdaptUGC::setFont(uint8_t *f, bool filled ){    // adapter
 
 void  AdaptUGC::begin() {
 	eglib = &myeglib;
+	_display=xSemaphoreCreateMutex();
 
 #if DISPLAY_W == 240  // the 2.4 inch display
 	if( display_orientation.get() == DISPLAY_TOPDOWN ){

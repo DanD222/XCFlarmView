@@ -91,6 +91,7 @@ void SetupMenuValFloat::display( int mode ){
 	}
 	else if (mode == 1){   // save mode, do show only "Saved"true
 		y+=24;
+		DisplayLock lock(_display);
 		egl->setPrintPos( 1, DISPLAY_H-7 );
 		egl->print(PROGMEM"Saved        ");
 		vTaskDelay(1000 / portTICK_PERIOD_MS);
@@ -100,6 +101,7 @@ void SetupMenuValFloat::display( int mode ){
 void SetupMenuValFloat::displayVal()
 {
 	ESP_LOGI(FNAME,"displayVal %s", value() );
+	DisplayLock lock(_display);
 	egl->setPrintPos( 1, 70 );
 	egl->setFont(ucg_font_fub25_hf, true);
 	egl->print( value() );
